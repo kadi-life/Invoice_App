@@ -1,0 +1,346 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Invoice #{{ invoice.invoice_number|default:invoice.id }}</title>
+    <style>
+        @page {
+            size: a4 portrait;
+            margin: 1.5cm;
+        }
+        body {
+            font-family: "DejaVu Sans", Arial, sans-serif;
+            font-size: 10px;
+            line-height: 1.3;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .company-details {
+            font-size: 9px;
+            line-height: 1.4;
+            margin-bottom: 10px;
+            flex: 1;
+        }
+        .company-details p {
+            margin: 2px 0;
+        }
+        .company-logo {
+            width: 60px;
+            height: 30px;
+            object-fit: contain;
+            margin-right: 15px;
+        }
+        .company-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .company-header {
+            margin-bottom: 20px;
+        }
+        
+        .company-info h2 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .company-info p {
+            margin: 0;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .logo-section {
+            text-align: left;
+            margin: 20px 0;
+        }
+        
+        .company-logo {
+            width: 60px;
+            height: 30px;
+            object-fit: contain;
+        }
+        
+        .demarcation-line {
+            border-bottom: 2px solid #333;
+            margin: 20px 0;
+        }
+        
+        .totals-section {
+            margin-top: 30px;
+            border-top: 2px solid #333;
+            padding-top: 20px;
+            text-align: right;
+        }
+        
+        .total-row {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .total-grand {
+            font-weight: bold;
+            font-size: 16px;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+        
+        .total-label {
+            font-weight: bold;
+            display: inline-block;
+            width: 120px;
+        }
+        
+        .total-amount {
+            font-weight: bold;
+            display: inline-block;
+        }
+        .client-section {
+            margin-bottom: 20px;
+        }
+        .client-section h3 {
+            margin: 0 0 8px 0;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .client-section p {
+            margin: 3px 0;
+            font-size: 10px;
+        }
+        .invoice-info {
+            margin-bottom: 20px;
+        }
+        .invoice-info h3 {
+            margin: 0 0 8px 0;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .invoice-info p {
+            margin: 3px 0;
+            font-size: 10px;
+        }
+        .invoice-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin: 20px 0;
+            border: 2px solid #333;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 9px;
+        }
+        .items-table th {
+            background-color: #f8f8f8;
+            color: #333;
+            padding: 8px 4px;
+            text-align: center;
+            font-weight: 900;
+            font-size: 12px;
+            border: 1px solid #ddd;
+        }
+        .items-table td {
+            padding: 6px 4px;
+            text-align: center;
+            border: 1px solid #ddd;
+            vertical-align: middle;
+        }
+        .items-table .description {
+            text-align: left;
+            font-size: 8px;
+        }
+        .items-table .sn {
+            width: 30px;
+        }
+        .items-table .qty {
+            width: 60px;
+        }
+        .items-table .unit-price {
+            width: 80px;
+        }
+        .items-table .total-amount {
+            width: 80px;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 10px;
+        }
+        .status-pending {
+            background-color: #FFC107;
+            color: #000;
+        }
+        .status-paid {
+            background-color: #4CAF50;
+            color: #fff;
+        }
+        .status-overdue {
+            background-color: #F44336;
+            color: #fff;
+        }
+        .notes {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f8f8;
+            border-left: 4px solid #333;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 9px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+        .item-image {
+            width: 24px;
+            height: 24px;
+            object-fit: cover;
+            margin-right: 4px;
+            vertical-align: middle;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="company-header">
+        <div class="company-info">
+            <p>NO. 17 Eastern Bypass, Buchi Atako Villa Port Harcourt, T: 07035495280, E: info@skidslogistics.com.</p>
+        </div>
+    </div>
+    
+    <div class="logo-section">
+        <img src="{% static 'images/skids_logo.png' %}" alt="Skids Logistics Logo" class="company-logo">
+    </div>
+    
+    <div class="demarcation-line"></div>
+
+    <div class="client-section">
+        <p><strong>{{ invoice.client_name }}</strong></p>
+    </div>
+
+    <div class="invoice-info">
+        <p><strong>Invoice:</strong> {{ invoice.invoice_number|default:invoice.id }}</p>
+        <p><strong>Date:</strong> {{ invoice.date_created|date:"d/m/Y" }}</p>
+        <p><strong>Due Date:</strong> {{ invoice.due_date|date:"d/m/Y" }}</p>
+        <p><strong>Status:</strong> 
+            {% if invoice.is_overdue %}
+                Overdue
+            {% else %}
+                {{ invoice.get_status_display }}
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="invoice-title" style="border: none";>
+        <span style="text-decoration: underline; font-size: 18px; font-weight: bold; color: #333; border: none";>
+            {{ invoice.invoice_number|default:invoice.id }}
+        </span>
+    </div>
+
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th>ITEM</th>
+                <th>DESCRIPTION</th>
+                <th>QTY</th>
+                <th>UNIT PRICE ({{ invoice.currency|default:'NGN' }})</th>
+                <th>TOTAL ({{ invoice.currency|default:'NGN' }})</th>
+                <th>LEAD TIME</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in invoice.items.all %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td class="description">
+                    {% if item.image %}<img src="{{ item.image.url }}" alt="" class="item-image">{% endif %}
+                    {{ item.name }}
+                </td>
+                <td>{{ item.quantity }}EA</td>
+                <td>
+                    {% if invoice.currency == 'NGN' %}NGN
+                    {% elif invoice.currency == 'USD' %}USD
+                    {% elif invoice.currency == 'EUR' %}EUR
+                    {% elif invoice.currency == 'GBP' %}GBP
+                    {% elif invoice.currency == 'CAD' %}CAD
+                    {% elif invoice.currency == 'AUD' %}AUD
+                    {% endif %}
+                    {{ item.price|floatformat:0 }}
+                </td>
+                <td>
+                    {% if invoice.currency == 'NGN' %}NGN
+                    {% elif invoice.currency == 'USD' %}USD
+                    {% elif invoice.currency == 'EUR' %}EUR
+                    {% elif invoice.currency == 'GBP' %}GBP
+                    {% elif invoice.currency == 'CAD' %}CAD
+                    {% elif invoice.currency == 'AUD' %}AUD
+                    {% endif %}
+                    {{ item.total|floatformat:0 }}
+                </td>
+                <td>{{ item.lead_time|default:"1-7 DAYS" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="totals-section">
+        <div class="total-row">
+            <span class="total-label">Subtotal:</span>
+            <span class="total-amount">
+                <span class="currency-symbol">
+                {% if invoice.currency == 'NGN' %}NGN{% elif invoice.currency == 'USD' %}USD{% elif invoice.currency == 'EUR' %}EUR{% elif invoice.currency == 'GBP' %}GBP{% elif invoice.currency == 'CAD' %}CAD{% elif invoice.currency == 'AUD' %}AUD{% else %}NGN{% endif %}
+                </span>{{ invoice.subtotal|floatformat:2 }}
+            </span>
+        </div>
+        <div class="total-row">
+            <span class="total-label">VAT ({{ invoice.vat_percentage }}%):</span>
+            <span class="total-amount">
+                <span class="currency-symbol">
+                {% if invoice.currency == 'NGN' %}NGN{% elif invoice.currency == 'USD' %}USD{% elif invoice.currency == 'EUR' %}EUR{% elif invoice.currency == 'GBP' %}GBP{% elif invoice.currency == 'CAD' %}CAD{% elif invoice.currency == 'AUD' %}AUD{% else %}NGN{% endif %}
+                </span>{{ invoice.vat_amount|floatformat:2 }}
+            </span>
+        </div>
+        <div class="total-row total-grand">
+            <span class="total-label">Total:</span>
+            <span class="total-amount">
+                <span class="currency-symbol">
+                {% if invoice.currency == 'USD' %}USD{% elif invoice.currency == 'EUR' %}EUR{% elif invoice.currency == 'GBP' %}GBP{% elif invoice.currency == 'CAD' %}CAD{% elif invoice.currency == 'AUD' %}AUD{% else %}NGN{% endif %}
+                </span>{{ invoice.total|floatformat:2 }}
+            </span>
+        </div>
+    </div>
+
+    {% if invoice.notes %}
+    <div class="notes">
+        <p><strong>Notes:</strong></p>
+        <p>{{ invoice.notes }}</p>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <p><strong>Thank you for your business!</strong></p>
+        <p>Payment is due on {{ invoice.due_date|date:"F d, Y" }}</p>
+    </div>
+</body>
+</html>

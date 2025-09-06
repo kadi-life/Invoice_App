@@ -1,0 +1,132 @@
+Content-Type: text/html; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: Invoice #10 from Your Company Name
+From: no-reply@example.com
+To: zorkpolonglife58@gmail.com
+Date: Fri, 05 Sep 2025 23:01:28 -0000
+Message-ID: <175711328804.10844.488356733032846199@DESKTOP-TUU3JJK>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Invoice #10</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .content {
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #777;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .invoice-details {
+            background-color: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        table th, table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        table th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>Invoice #10</h1>
+        </div>
+        
+        <div class="content">
+            <p>Dear longlife,</p>
+            
+            <p>Please find attached invoice #10 for your records.</p>
+            
+            <div class="invoice-details">
+                <h3>Invoice Summary</h3>
+                <p><strong>Invoice Number:</strong> #10</p>
+                <p><strong>Date:</strong> </p>
+                <p><strong>Due Date:</strong> August 21, 2025</p>
+                <p><strong>Total Amount:</strong> $2400000.00</p>
+                
+                <table>
+                    <tr>
+                        <th>Description</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                    </tr>
+                    
+                    <tr>
+                        <td>POS System</td>
+                        <td>1</td>
+                        <td>$2000000.00</td>
+                        <td>$2000000.00</td>
+                    </tr>
+                    
+                </table>
+                
+                <p><strong>Subtotal:</strong> $2000000.00</p>
+                <p><strong>VAT (20.00%):</strong> $400000.00</p>
+                <p><strong>Total:</strong> $2400000.00</p>
+            </div>
+            
+            <p>Please find the detailed invoice attached to this email as a PDF file.</p>
+            
+            <p>If you have any questions regarding this invoice, please don't hesitate to contact us.</p>
+            
+            <p>Thank you for your business!</p>
+            
+            <p>Best regards,<br>
+            Your Company Name</p>
+        </div>
+        
+        <div class="footer">
+            <p>This is an automated email. Please do not reply to this message.</p>
+            <p>&copy;  Your Company Name. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
+-------------------------------------------------------------------------------

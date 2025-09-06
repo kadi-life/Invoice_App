@@ -1,0 +1,452 @@
+{% extends 'base.html' %}
+
+{% block title %}Quotation Details{% endblock %}
+
+{% block extra_css %}
+<style>
+    .quotation-header {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .item-row {
+        transition: all 0.2s;
+    }
+    
+    .item-row:hover {
+        background-color: rgba(76, 175, 80, 0.05);
+    }
+    
+    .delete-item {
+        color: #dc3545;
+        cursor: pointer;
+        opacity: 0.7;
+        transition: all 0.2s;
+    }
+    
+    .delete-item:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+    
+    .add-item-btn {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        transition: all 0.3s;
+    }
+    
+    .add-item-btn:hover {
+        background-color: #388E3C;
+        transform: scale(1.05);
+    }
+    
+    .action-btn {
+        transition: all 0.3s;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-3px);
+    }
+    
+    .total-section {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+    }
+    
+    .total-line {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+    
+    .grand-total {
+        font-size: 1.2rem;
+        font-weight: bold;
+        border-top: 2px solid #dee2e6;
+        padding-top: 10px;
+        margin-top: 10px;
+    }
+    
+    /* Animation for save button */
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+    }
+    
+    .pulse-animation {
+        animation: pulse 2s infinite;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">{% if quotation.id %}Edit Quotation{% else %}New Quotation{% endif %}</h1>
+        <div>
+            <a href="{% url 'quotation_list' %}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left me-2"></i> Back to List
+            </a>
+            {% if quotation.id %}
+            <a href="#" class="btn btn-outline-primary me-2">
+                <i class="fas fa-file-pdf me-2"></i> Export PDF
+            </a>
+            <a href="{% url 'quotation_convert' quotation.id %}?redirect=detail" class="btn btn-outline-success">
+                <i class="fas fa-file-invoice me-2"></i> Convert to Invoice
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <form id="quotationForm" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <!-- Currency Selection Section -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Currency Selection</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Select Currency</label>
+                        <select name="currency" class="form-select" required>
+                            <option value="NGN" selected>Nigerian Naira (₦)</option>
+                            <option value="USD">US Dollar ($)</option>
+                            <option value="EUR">Euro (€)</option>
+                            <option value="GBP">British Pound (£)</option>
+                            <option value="CAD">Canadian Dollar (C$)</option>
+                            <option value="AUD">Australian Dollar (A$)</option>
+                        </select>
+                        <small class="text-muted">Choose the currency for this quotation. This cannot be changed after creation.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Client Information Section -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Quotation Number</label>
+                        <input type="text" name="quotation_number" class="form-control" value="{{ quotation.quotation_number }}" placeholder="e.g., QT-2024-001" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Client Name</label>
+                        <input type="text" name="client_name" class="form-control" value="{{ quotation.client_name }}" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Date</label>
+                        <input type="date" name="date_created" class="form-control" value="{% if quotation.date_created %}{{ quotation.date_created|date:'Y-m-d' }}{% else %}{% now 'Y-m-d' %}{% endif %}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">RFQ Number</label>
+                        <input type="text" name="rfq_number" class="form-control" value="{{ quotation.rfq_number }}" placeholder="e.g., 6315-00749">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Vessel Name</label>
+                        <input type="text" name="vessel_name" class="form-control" value="{{ quotation.vessel_name }}" placeholder="e.g., M/V FPSO Mayo Abo">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Additional Notes / Payment Instructions</label>
+                        <textarea name="notes" class="form-control" rows="3" placeholder="Enter any additional notes, payment instructions, or special requirements...">{{ quotation.notes }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Items Section -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Items</h5>
+                
+                <div class="table-responsive">
+                    <table class="table" id="itemsTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 30%">Description</th>
+                                <th style="width: 12%">Image (optional)</th>
+                                <th style="width: 12%" class="price-header">Price (NGN)</th>
+                                <th style="width: 12%">Quantity</th>
+                                <th style="width: 12%">Lead Time</th>
+                                <th style="width: 12%" class="total-header">Total (NGN)</th>
+                                <th style="width: 10%">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if quotation.items.all %}
+                                {% for item in quotation.items.all %}
+                                <tr class="item-row">
+                                    <td>
+                                        <input type="text" name="item_name[]" class="form-control" value="{{ item.name }}" required>
+                                    </td>
+                                    <td>
+                                        <input type="file" name="item_image[]" accept="image/*" class="form-control">
+                                    </td>
+                                    <td>
+                                        <input type="number" name="item_price[]" class="form-control item-price" value="{{ item.price }}" step="0.01" min="0" required>
+                                    </td>
+                                    <td>
+                                        <input type="number" name="item_quantity[]" class="form-control item-quantity" value="{{ item.quantity }}" min="1" required>
+                                    </td>
+                                    <td>
+                                        <input type="text" name="item_lead_time[]" class="form-control" value="{{ item.lead_time }}" placeholder="e.g., 1-7 DAYS">
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control item-total" value="{{ item.total }}" readonly>
+                                    </td>
+                                    <td class="text-center">
+                                        <i class="fas fa-trash delete-item"></i>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr class="item-row">
+                                    <td>
+                                        <input type="text" name="item_name[]" class="form-control" required>
+                                    </td>
+                                    <td>
+                                        <input type="file" name="item_image[]" accept="image/*" class="form-control">
+                                    </td>
+                                    <td>
+                                        <input type="number" name="item_price[]" class="form-control item-price" step="0.01" min="0" required>
+                                    </td>
+                                    <td>
+                                        <input type="number" name="item_quantity[]" class="form-control item-quantity" value="1" min="1" required>
+                                    </td>
+                                    <td>
+                                        <input type="text" name="item_lead_time[]" class="form-control" placeholder="e.g., 1-7 DAYS">
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control item-total" value="0" readonly>
+                                    </td>
+                                    <td class="text-center">
+                                        <i class="fas fa-trash delete-item"></i>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <button type="button" id="addItemBtn" class="btn add-item-btn mt-2">
+                    <i class="fas fa-plus-circle me-2"></i> Add Item
+                </button>
+            </div>
+        </div>
+        
+        <!-- Totals Section -->
+        <div class="row">
+            <div class="col-md-6 ms-auto">
+                <div class="total-section">
+                    <div class="total-line">
+                        <span>Subtotal:</span>
+                        <span><span class="currency-symbol">₦</span><span id="subtotal">0.00</span></span>
+                    </div>
+                    <div class="total-line">
+                        <span>VAT (%):</span>
+                        <div style="width: 100px;">
+                            <input type="number" name="vat_percentage" id="vatPercentage" class="form-control" value="{{ quotation.vat_percentage|default:7.5 }}" min="0" max="100" step="0.01">
+                        </div>
+                    </div>
+                    <div class="total-line">
+                        <span>VAT Amount:</span>
+                        <span><span class="currency-symbol">₦</span><span id="vatAmount">0.00</span></span>
+                    </div>
+                    <div class="total-line grand-total">
+                        <span>Total:</span>
+                        <span><span class="currency-symbol">₦</span><span id="grandTotal">0.00</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="d-flex justify-content-end mt-4">
+            <button type="button" class="btn btn-outline-secondary me-2 action-btn">Cancel</button>
+            <button type="submit" class="btn btn-success action-btn pulse-animation">
+                <i class="fas fa-save me-2"></i> Save Quotation
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Currency selection handler
+        const currencySelect = document.querySelector('select[name="currency"]');
+        const priceHeader = document.querySelector('.price-header');
+        const totalHeader = document.querySelector('.total-header');
+        
+        function updateCurrencyDisplay() {
+            const selectedCurrency = currencySelect.value;
+            const currencySymbols = {
+                'NGN': '₦',
+                'USD': '$',
+                'EUR': '€',
+                'GBP': '£',
+                'CAD': 'C$',
+                'AUD': 'A$'
+            };
+            
+            const symbol = currencySymbols[selectedCurrency];
+            
+            // Update table headers
+            priceHeader.textContent = `Price (${selectedCurrency})`;
+            totalHeader.textContent = `Total (${selectedCurrency})`;
+            
+            // Update totals section currency symbols
+            document.querySelectorAll('.currency-symbol').forEach(el => {
+                el.textContent = symbol;
+            });
+        }
+        
+        // Update on currency change
+        currencySelect.addEventListener('change', updateCurrencyDisplay);
+        
+        // Initial update
+        updateCurrencyDisplay();
+        
+        // Form validation for duplicate quotation numbers
+        document.getElementById('quotationForm').addEventListener('submit', function(e) {
+            const quotationNumberInput = document.querySelector('input[name="quotation_number"]');
+            const quotationNumber = quotationNumberInput.value.trim();
+            
+            if (quotationNumber) {
+                // Check if this is a new quotation (not editing existing)
+                const isEditing = {{ quotation.id|yesno:'true,false' }};
+                if (!isEditing) {
+                    // For new quotations, check if number already exists
+                    fetch(`/quotations/check-number/?number=${encodeURIComponent(quotationNumber)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.exists) {
+                                e.preventDefault();
+                                alert(`Quotation number "${quotationNumber}" has already been used. Please choose a different number.`);
+                                quotationNumberInput.focus();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error checking quotation number:', error);
+                        });
+                }
+            }
+        });
+        
+        // Add new item row
+        document.getElementById('addItemBtn').addEventListener('click', function() {
+            const tbody = document.querySelector('#itemsTable tbody');
+            const newRow = document.createElement('tr');
+            newRow.className = 'item-row';
+            newRow.innerHTML = `
+                <td>
+                    <input type="text" name="item_name[]" class="form-control" required>
+                </td>
+                <td>
+                    <input type="file" name="item_image[]" accept="image/*" class="form-control">
+                </td>
+                <td>
+                    <input type="number" name="item_price[]" class="form-control item-price" step="0.01" min="0" required>
+                </td>
+                <td>
+                    <input type="number" name="item_quantity[]" class="form-control item-quantity" value="1" min="1" required>
+                </td>
+                <td>
+                    <input type="text" name="item_lead_time[]" class="form-control" placeholder="e.g., 1-7 DAYS">
+                </td>
+                <td>
+                    <input type="number" class="form-control item-total" value="0" readonly>
+                </td>
+                <td class="text-center">
+                    <i class="fas fa-trash delete-item"></i>
+                </td>
+            `;
+            tbody.appendChild(newRow);
+            attachEventListeners(newRow);
+        });
+        
+        // Delete item row
+        function attachDeleteListeners() {
+            document.querySelectorAll('.delete-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const tbody = document.querySelector('#itemsTable tbody');
+                    if (tbody.children.length > 1) {
+                        this.closest('tr').remove();
+                        calculateTotals();
+                    } else {
+                        alert('You need at least one item.');
+                    }
+                });
+            });
+        }
+        
+        // Calculate item total
+        function attachEventListeners(row) {
+            const priceInput = row.querySelector('.item-price');
+            const quantityInput = row.querySelector('.item-quantity');
+            const totalInput = row.querySelector('.item-total');
+            const deleteBtn = row.querySelector('.delete-item');
+            
+            function updateItemTotal() {
+                const price = parseFloat(priceInput.value) || 0;
+                const quantity = parseInt(quantityInput.value) || 0;
+                const total = price * quantity;
+                totalInput.value = total.toFixed(2);
+                calculateTotals();
+            }
+            
+            priceInput.addEventListener('input', updateItemTotal);
+            quantityInput.addEventListener('input', updateItemTotal);
+            
+            deleteBtn.addEventListener('click', function() {
+                const tbody = document.querySelector('#itemsTable tbody');
+                if (tbody.children.length > 1) {
+                    row.remove();
+                    calculateTotals();
+                } else {
+                    alert('You need at least one item.');
+                }
+            });
+        }
+        
+        // Attach event listeners to existing rows
+        document.querySelectorAll('#itemsTable tbody tr').forEach(row => {
+            attachEventListeners(row);
+        });
+        
+        // Calculate all totals
+        function calculateTotals() {
+            let subtotal = 0;
+            document.querySelectorAll('.item-total').forEach(item => {
+                subtotal += parseFloat(item.value) || 0;
+            });
+            
+            const vatPercentage = parseFloat(document.getElementById('vatPercentage').value) || 0;
+            const vatAmount = subtotal * (vatPercentage / 100);
+            const grandTotal = subtotal + vatAmount;
+            
+            document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+            document.getElementById('vatAmount').textContent = vatAmount.toFixed(2);
+            document.getElementById('grandTotal').textContent = grandTotal.toFixed(2);
+        }
+        
+        // Update totals when VAT percentage changes
+        document.getElementById('vatPercentage').addEventListener('input', calculateTotals);
+        
+        // Initial calculation
+        calculateTotals();
+        
+        // Default HTML form submission handled by server-side view
+    });
+</script>
+{% endblock %}

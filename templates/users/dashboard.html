@@ -1,0 +1,481 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard | Invoice & Quotation System{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+    .dashboard-header {
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stats-card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stats-icon {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+    }
+    
+    .stats-value {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    
+    .chart-container {
+        height: 400px;
+        margin-bottom: 2rem;
+    }
+    
+    .chart-card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        height: 100%;
+    }
+    
+    .recent-item {
+        border-left: 4px solid var(--primary-color);
+        padding-left: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .recent-item.overdue {
+        border-left-color: #dc3545;
+    }
+    
+    .recent-item.paid {
+        border-left-color: #28a745;
+    }
+    
+    .recent-item.pending {
+        border-left-color: #ffc107;
+    }
+    
+    .chart-3d-container {
+        height: 300px;
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="row align-items-center">
+        <div class="col-md-6">
+            <div class="d-flex align-items-center">
+                <div style="background: white; padding: 8px; border-radius: 8px; margin-right: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <img src="{% static 'images/skids_logo.png' %}" alt="Skids Logistics Logo" style="height: 50px;">
+                </div>
+                <h1 class="mb-0"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h1>
+            </div>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <p class="mb-0">Welcome, {{ user.get_full_name|default:user.email }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-4 mb-md-0">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <div class="stats-icon mb-3">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <h5 class="card-title">Total Quotations</h5>
+                <p class="stats-value mb-0">{{ quotation_count|default:"0" }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4 mb-md-0">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <div class="stats-icon mb-3">
+                    <i class="fas fa-file-invoice"></i>
+                </div>
+                <h5 class="card-title">Total Invoices</h5>
+                <p class="stats-value mb-0">{{ invoice_count|default:"0" }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4 mb-md-0">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <div class="stats-icon mb-3">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <h5 class="card-title">Paid Invoices</h5>
+                <p class="stats-value mb-0">{{ paid_count|default:"0" }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <div class="stats-icon mb-3">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <h5 class="card-title">Overdue Invoices</h5>
+                <p class="stats-value mb-0">{{ overdue_count|default:"0" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row mb-4">
+    <div class="col-md-6 mb-4 mb-md-0">
+        <div class="card chart-card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Monthly Revenue</h5>
+            </div>
+            <div class="card-body">
+                <div id="revenue-chart" class="chart-3d-container"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card chart-card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Invoice Status</h5>
+            </div>
+            <div class="card-body">
+                <div id="status-chart" class="chart-3d-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-md-6 mb-4 mb-md-0">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Recent Quotations</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_quotations %}
+                    {% for quotation in recent_quotations %}
+                    <div class="recent-item">
+                        <h6>{{ quotation.client_name }}</h6>
+                        <div class="d-flex justify-content-between">
+                            <small>{{ quotation.date_created|date:"M d, Y" }}</small>
+                            <span class="badge bg-primary">₦{{ quotation.total }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No recent quotations</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Recent Invoices</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_invoices %}
+                    {% for invoice in recent_invoices %}
+                    <div class="recent-item {{ invoice.status|lower }}">
+                        <h6>{{ invoice.client_name }}</h6>
+                        <div class="d-flex justify-content-between">
+                            <small>{{ invoice.date_created|date:"M d, Y" }}</small>
+                            <div>
+                                <span class="badge {% if invoice.status == 'Paid' %}bg-success{% elif invoice.status == 'Overdue' %}bg-danger{% else %}bg-warning{% endif %}">{{ invoice.status }}</span>
+                                <span class="badge bg-primary ms-1">₦{{ invoice.total }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No recent invoices</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Data from backend
+        const monthlyRevenueData = JSON.parse('{{ monthly_revenue|safe|escapejs }}');
+        const invoiceStatusData = JSON.parse('{{ invoice_status|safe|escapejs }}');
+        
+        // 3D Revenue Chart
+        createRevenueChart();
+        
+        // 3D Status Chart
+        createStatusChart();
+        
+        function createRevenueChart() {
+            const container = document.getElementById('revenue-chart');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            // Create scene
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(width, height);
+            renderer.setClearColor(0xffffff, 0);
+            container.appendChild(renderer.domElement);
+            
+            // Add lights
+            const light = new THREE.DirectionalLight(0xffffff, 1);
+            light.position.set(1, 1, 1);
+            scene.add(light);
+            
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            
+            // Create bar chart
+            const barGroup = new THREE.Group();
+            scene.add(barGroup);
+            
+            const maxAmount = Math.max(...monthlyRevenueData.map(d => d.amount));
+            const barWidth = 1;
+            const spacing = 0.5;
+            const totalWidth = monthlyRevenueData.length * (barWidth + spacing) - spacing;
+            
+            // Create bars
+            monthlyRevenueData.forEach((data, i) => {
+                const normalizedHeight = (data.amount / maxAmount) * 5;
+                const geometry = new THREE.BoxGeometry(barWidth, normalizedHeight, barWidth);
+                
+                // Use brand color with slight variations for each bar
+                const hue = 120; // Green hue
+                const saturation = 60 + (i * 5);
+                const lightness = 40 + (i * 3);
+                const color = new THREE.Color(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+                
+                const material = new THREE.MeshPhongMaterial({ 
+                    color: color,
+                    shininess: 100,
+                    specular: 0x111111
+                });
+                
+                const bar = new THREE.Mesh(geometry, material);
+                bar.position.x = i * (barWidth + spacing) - totalWidth / 2;
+                bar.position.y = normalizedHeight / 2;
+                
+                barGroup.add(bar);
+                
+                // Tooltip on hover
+                bar.userData = { label: `${data.month}: ₦${data.amount}` };
+            });
+            
+            // Position camera
+            camera.position.set(0, 5, 15);
+            camera.lookAt(0, 0, 0);
+            
+            // Simple hover detection and tooltip
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+            const tooltip = document.createElement('div');
+            tooltip.style.position = 'absolute';
+            tooltip.style.padding = '6px 10px';
+            tooltip.style.background = 'rgba(0,0,0,0.7)';
+            tooltip.style.color = '#fff';
+            tooltip.style.borderRadius = '4px';
+            tooltip.style.pointerEvents = 'none';
+            tooltip.style.display = 'none';
+            container.appendChild(tooltip);
+
+            container.addEventListener('mousemove', (event) => {
+                const rect = container.getBoundingClientRect();
+                mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(barGroup.children);
+                if (intersects.length > 0 && intersects[0].object.userData.label) {
+                    tooltip.style.display = 'block';
+                    tooltip.textContent = intersects[0].object.userData.label;
+                    tooltip.style.left = `${event.clientX - rect.left + 10}px`;
+                    tooltip.style.top = `${event.clientY - rect.top + 10}px`;
+                } else {
+                    tooltip.style.display = 'none';
+                }
+            });
+
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                barGroup.rotation.y += 0.005;
+                
+                renderer.render(scene, camera);
+            }
+            
+            animate();
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                const newWidth = container.clientWidth;
+                const newHeight = container.clientHeight;
+                
+                camera.aspect = newWidth / newHeight;
+                camera.updateProjectionMatrix();
+                
+                renderer.setSize(newWidth, newHeight);
+            });
+        }
+        
+        function createStatusChart() {
+            const container = document.getElementById('status-chart');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            // Create scene
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(width, height);
+            renderer.setClearColor(0xffffff, 0);
+            container.appendChild(renderer.domElement);
+            
+            // Add lights
+            const light = new THREE.DirectionalLight(0xffffff, 1);
+            light.position.set(1, 1, 1);
+            scene.add(light);
+            
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            
+            // Legend
+            const legend = document.createElement('div');
+            legend.style.display = 'flex';
+            legend.style.gap = '12px';
+            legend.style.marginBottom = '8px';
+            const legendMap = { 'Paid': '#28a745', 'Pending': '#ffc107', 'Overdue': '#dc3545' };
+            Object.keys(legendMap).forEach(k => {
+                const item = document.createElement('div');
+                item.innerHTML = `<span style="display:inline-block;width:12px;height:12px;background:${legendMap[k]};margin-right:6px;border-radius:2px;"></span>${k}`;
+                legend.appendChild(item);
+            });
+            container.parentElement.insertBefore(legend, container);
+            
+            // Create pie chart
+            const pieGroup = new THREE.Group();
+            scene.add(pieGroup);
+            
+            const radius = 3;
+            const depth = 0.8;
+            const totalCount = invoiceStatusData.reduce((sum, d) => sum + d.count, 0);
+            
+            let startAngle = 0;
+            
+            // Colors for different statuses
+            const colors = {
+                'Paid': 0x28a745, // Green
+                'Pending': 0xffc107, // Yellow
+                'Overdue': 0xdc3545 // Red
+            };
+            
+            // Create pie segments
+            invoiceStatusData.forEach(data => {
+                const angle = (data.count / totalCount) * Math.PI * 2;
+                const endAngle = startAngle + angle;
+                
+                const shape = new THREE.Shape();
+                shape.moveTo(0, 0);
+                shape.arc(0, 0, radius, startAngle, endAngle, false);
+                shape.lineTo(0, 0);
+                
+                const extrudeSettings = {
+                    depth: depth,
+                    bevelEnabled: false
+                };
+                
+                const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+                const material = new THREE.MeshPhongMaterial({ 
+                    color: colors[data.status],
+                    shininess: 100,
+                    specular: 0x111111
+                });
+                
+                const segment = new THREE.Mesh(geometry, material);
+                segment.userData = { label: `${data.status}: ${data.count}` };
+                pieGroup.add(segment);
+                
+                startAngle = endAngle;
+            });
+            
+            // Rotate to show pie from top
+            pieGroup.rotation.x = -Math.PI / 2;
+            
+            // Position camera
+            camera.position.set(0, 8, 8);
+            camera.lookAt(0, 0, 0);
+            
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+            const tooltip = document.createElement('div');
+            tooltip.style.position = 'absolute';
+            tooltip.style.padding = '6px 10px';
+            tooltip.style.background = 'rgba(0,0,0,0.7)';
+            tooltip.style.color = '#fff';
+            tooltip.style.borderRadius = '4px';
+            tooltip.style.pointerEvents = 'none';
+            tooltip.style.display = 'none';
+            container.appendChild(tooltip);
+
+            container.addEventListener('mousemove', (event) => {
+                const rect = container.getBoundingClientRect();
+                mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(pieGroup.children);
+                if (intersects.length > 0 && intersects[0].object.userData.label) {
+                    tooltip.style.display = 'block';
+                    tooltip.textContent = intersects[0].object.userData.label;
+                    tooltip.style.left = `${event.clientX - rect.left + 10}px`;
+                    tooltip.style.top = `${event.clientY - rect.top + 10}px`;
+                } else {
+                    tooltip.style.display = 'none';
+                }
+            });
+
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                pieGroup.rotation.z += 0.005;
+                
+                renderer.render(scene, camera);
+            }
+            
+            animate();
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                const newWidth = container.clientWidth;
+                const newHeight = container.clientHeight;
+                
+                camera.aspect = newWidth / newHeight;
+                camera.updateProjectionMatrix();
+                
+                renderer.setSize(newWidth, newHeight);
+            });
+        }
+    });
+</script>
+{% endblock %}

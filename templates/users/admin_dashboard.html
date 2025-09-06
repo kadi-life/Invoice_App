@@ -1,0 +1,392 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard | Invoice & Quotation System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-card {
+        transition: transform 0.3s, box-shadow 0.3s;
+        border-left: 4px solid #28a745;
+    }
+    
+    .admin-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stats-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stats-label {
+        font-size: 1rem;
+        opacity: 0.9;
+    }
+    
+    .user-table {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .btn-admin {
+        background-color: #28a745;
+        border-color: #28a745;
+        transition: all 0.3s;
+    }
+    
+    .btn-admin:hover {
+        background-color: #218838;
+        border-color: #218838;
+        transform: translateY(-2px);
+    }
+    
+    .status-badge {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+    }
+    
+    .status-badge.staff {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .status-badge.user {
+        background-color: #6c757d;
+        color: white;
+    }
+    
+    .status-badge.inactive {
+        background-color: #dc3545;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">
+            <i class="fas fa-cog me-2"></i>Admin Dashboard
+        </h1>
+        <a href="{% url 'register' %}" class="btn btn-admin btn-lg">
+            <i class="fas fa-user-plus me-2"></i>Register New User
+        </a>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stats-card">
+                <div class="stats-number">{{ total_users }}</div>
+                <div class="stats-label">Total Users</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-card">
+                <div class="stats-number">{{ staff_users }}</div>
+                <div class="stats-label">Staff Users</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-card">
+                <div class="stats-number">{{ active_users }}</div>
+                <div class="stats-label">Active Users</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- User Management Section -->
+    <div class="card user-table">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                <i class="fas fa-users me-2"></i>User Management
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if users %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if user.profile_picture %}
+                                        <img src="{{ user.profile_picture.url }}" alt="Profile" class="rounded-circle me-2" width="40" height="40">
+                                    {% else %}
+                                        <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-user text-white"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-bold">{{ user.get_full_name|default:"No Name" }}</div>
+                                        <small class="text-muted">ID: {{ user.id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                <span class="badge status-badge {% if user.is_staff %}staff{% else %}user{% endif %}">
+                                    {% if user.is_staff %}Staff{% else %}User{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge status-badge {% if user.is_active %}staff{% else %}inactive{% endif %}">
+                                    {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'admin_user_detail' user.id %}" class="btn btn-sm btn-outline-secondary" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'admin_user_edit' user.id %}" class="btn btn-sm btn-outline-primary" title="Edit User">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'admin_user_toggle_active' user.id %}" class="btn btn-sm {% if user.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}" title="Toggle Active">
+                                        {% if user.is_active %}<i class="fas fa-user-slash"></i>{% else %}<i class="fas fa-user-check"></i>{% endif %}
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h5>No Users Found</h5>
+                <p class="text-muted">Start by registering your first user.</p>
+                <a href="{% url 'register' %}" class="btn btn-admin">
+                    <i class="fas fa-user-plus me-2"></i>Register First User
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Quotations & Invoices Section -->
+    <div class="row mt-4">
+        <div class="col-md-12 mb-4">
+            <div class="card user-table">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-invoice me-2"></i>Quotations
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <input type="text" class="form-control" id="quotationSearch" placeholder="Search quotations...">
+                            <select class="form-select" id="quotationFilter">
+                                <option value="all">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Client</th>
+                                    <th>Created By</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="quotationsTable">
+                                {% for quotation in quotations %}
+                                <tr>
+                                    <td>{{ quotation.id }}</td>
+                                    <td>{{ quotation.client_name }}</td>
+                                    <td>{{ quotation.user.username }}</td>
+                                    <td>{{ quotation.date_created|date:"M d, Y" }}</td>
+                                    <td>{% if quotation.currency == 'NGN' %}₦{% elif quotation.currency == 'USD' %}${% elif quotation.currency == 'EUR' %}€{% elif quotation.currency == 'GBP' %}£{% elif quotation.currency == 'CAD' %}C${% elif quotation.currency == 'AUD' %}A${% endif %} {{ quotation.total|default:"0.00" }}</td>
+
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'view_quotation' quotation.id %}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'quotation_pdf' quotation.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-file-pdf"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if quotations.has_other_pages %}
+                    <nav aria-label="Quotation pagination" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if quotations.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?quotation_page={{ quotations.previous_page_number }}">&laquo;</a>
+                            </li>
+                            {% endif %}
+                            {% for i in quotations.paginator.page_range %}
+                            <li class="page-item {% if quotations.number == i %}active{% endif %}">
+                                <a class="page-link" href="?quotation_page={{ i }}">{{ i }}</a>
+                            </li>
+                            {% endfor %}
+                            {% if quotations.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?quotation_page={{ quotations.next_page_number }}">&raquo;</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card user-table">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-invoice-dollar me-2"></i>Invoices
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <input type="text" class="form-control" id="invoiceSearch" placeholder="Search invoices...">
+                            <select class="form-select" id="invoiceFilter">
+                                <option value="all">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="paid">Paid</option>
+                                <option value="overdue">Overdue</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Client</th>
+                                    <th>Created By</th>
+                                    <th>Date</th>
+                                    <th>Due Date</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invoicesTable">
+                                {% for invoice in invoices %}
+                                <tr>
+                                    <td>{{ invoice.id }}</td>
+                                    <td>{{ invoice.client_name }}</td>
+                                    <td>{{ invoice.user.username }}</td>
+                                    <td>{{ invoice.date_created|date:"M d, Y" }}</td>
+                                    <td>{{ invoice.due_date|date:"M d, Y" }}</td>
+                                    <td>{% if invoice.currency == 'NGN' %}₦{% elif invoice.currency == 'USD' %}${% elif invoice.currency == 'EUR' %}€{% elif invoice.currency == 'GBP' %}£{% elif invoice.currency == 'CAD' %}C${% elif invoice.currency == 'AUD' %}A${% endif %} {{ invoice.total|default:"0.00" }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ invoice.status|lower }}">{{ invoice.status }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'view_invoice' invoice.id %}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'invoice_pdf' invoice.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-file-pdf"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if invoices.has_other_pages %}
+                    <nav aria-label="Invoice pagination" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if invoices.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?invoice_page={{ invoices.previous_page_number }}">&laquo;</a>
+                            </li>
+                            {% endif %}
+                            {% for i in invoices.paginator.page_range %}
+                            <li class="page-item {% if invoices.number == i %}active{% endif %}">
+                                <a class="page-link" href="?invoice_page={{ i }}">{{ i }}</a>
+                            </li>
+                            {% endfor %}
+                            {% if invoices.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?invoice_page={{ invoices.next_page_number }}">&raquo;</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card admin-card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-user-plus me-2"></i>User Registration
+                    </h5>
+                    <p class="card-text">Register new users to the system with appropriate roles and permissions.</p>
+                    <a href="{% url 'register' %}" class="btn btn-admin">
+                        <i class="fas fa-user-plus me-2"></i>Register User
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card admin-card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-chart-bar me-2"></i>System Overview
+                    </h5>
+                    <p class="card-text">View system statistics and manage overall application settings.</p>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,522 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if invoice %}Edit Invoice{% else %}New Invoice{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .invoice-header {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .item-row {
+        transition: all 0.2s;
+    }
+    
+    .item-row:hover {
+        background-color: rgba(76, 175, 80, 0.05);
+    }
+    
+    .delete-item {
+        color: #dc3545;
+        cursor: pointer;
+        opacity: 0.7;
+        transition: all 0.2s;
+    }
+    
+    .delete-item:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+    
+    .add-item-btn {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        transition: all 0.3s;
+    }
+    
+    .add-item-btn:hover {
+        background-color: #388E3C;
+        transform: scale(1.05);
+    }
+    
+    .action-btn {
+        transition: all 0.3s;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-3px);
+    }
+    
+    .total-section {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+    }
+    
+    .total-line {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+    
+    .grand-total {
+        font-size: 1.2rem;
+        font-weight: bold;
+        border-top: 2px solid #dee2e6;
+        padding-top: 10px;
+        margin-top: 10px;
+    }
+    
+    .status-badge {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+    }
+    
+    .status-badge.pending {
+        background-color: #FF9800;
+        color: white;
+    }
+    
+    .status-badge.paid {
+        background-color: #2196F3;
+        color: white;
+    }
+    
+    .status-badge.overdue {
+        background-color: #F44336;
+        color: white;
+    }
+    
+    /* Animation for save button */
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+    }
+    
+    .pulse-animation {
+        animation: pulse 2s infinite;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">{% if invoice.id %}Edit Invoice{% else %}New Invoice{% endif %}</h1>
+        <div>
+            <a href="{% url 'invoice_list' %}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left me-2"></i> Back to List
+            </a>
+            {% if invoice.id %}
+            <a href="{% url 'invoice_pdf' invoice.id %}" class="btn btn-outline-primary me-2" target="_blank">
+                <i class="fas fa-file-pdf me-2"></i> Export PDF
+            </a>
+            <a href="{% url 'invoice_email' invoice.id %}" class="btn btn-outline-info">
+                <i class="fas fa-envelope me-2"></i> Email Invoice
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <form id="invoiceForm" method="post" action="{% if invoice.id %}{% url 'invoice_detail' invoice.id %}{% else %}{% url 'invoice_detail' %}{% endif %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        {% if invoice.id and invoice.user == request.user %}
+        <!-- Status Update Section -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Invoice Status</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Update Status</label>
+                        <select name="status" class="form-select" required>
+                            <option value="Pending" {% if invoice.status == 'Pending' %}selected{% endif %}>Pending</option>
+                            <option value="Paid" {% if invoice.status == 'Paid' %}selected{% endif %}>Paid</option>
+                            <option value="Overdue" {% if invoice.status == 'Overdue' %}selected{% endif %}>Overdue</option>
+                        </select>
+                        <small class="text-muted">Current status: {{ invoice.get_status_display }}</small>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end mb-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Update Status
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Currency Selection Section -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Currency Selection</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Select Currency</label>
+                        <select name="currency" class="form-select" required>
+                            <option value="NGN" selected>Nigerian Naira (₦)</option>
+                            <option value="USD">US Dollar ($)</option>
+                            <option value="EUR">Euro (€)</option>
+                            <option value="GBP">British Pound (£)</option>
+                            <option value="CAD">Canadian Dollar (C$)</option>
+                            <option value="AUD">Australian Dollar (A$)</option>
+                        </select>
+                        <small class="text-muted">Choose the currency for this invoice. This cannot be changed after creation.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Client Information Section -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    {% if invoice.id %}
+                    <span class="status-badge {% if invoice.is_overdue %}overdue{% else %}{{ invoice.status|lower }}{% endif %}">
+                        {% if invoice.is_overdue %}
+                            Overdue
+                        {% else %}
+                            {{ invoice.get_status_display }}
+                        {% endif %}
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Client Name</label>
+                        <input type="text" name="client_name" class="form-control" value="{{ invoice.client_name }}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Invoice Number</label>
+                        <input type="text" name="invoice_number" class="form-control" value="{{ invoice.invoice_number }}" placeholder="e.g., INV-2024-001" {% if invoice.id %}readonly{% endif %} required>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Created Date</label>
+                        <input type="date" name="date_created" class="form-control" value="{% if invoice.date_created %}{{ invoice.date_created|date:'Y-m-d' }}{% else %}{% now 'Y-m-d' %}{% endif %}" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Due Date</label>
+                        <input type="date" name="due_date" class="form-control" value="{% if invoice.due_date %}{{ invoice.due_date|date:'Y-m-d' }}{% endif %}" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="Pending" {% if invoice.status == 'Pending' %}selected{% endif %}>Pending</option>
+                            <option value="Paid" {% if invoice.status == 'Paid' %}selected{% endif %}>Paid</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Items Section -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Items</h5>
+                
+                <div class="table-responsive">
+                    <table class="table" id="itemsTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 35%">Description</th>
+                                <th style="width: 15%">Image (optional)</th>
+                                <th style="width: 15%" class="price-header">Price (NGN)</th>
+                                <th style="width: 15%">Quantity</th>
+                                <th style="width: 20%" class="total-header">Total (NGN)</th>
+                                <th style="width: 10%">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if invoice.items.all %}
+                                {% for item in invoice.items.all %}
+                                <tr class="item-row">
+                                    <td>
+                                        <input type="text" name="item_name[]" class="form-control" value="{{ item.name }}" required>
+                                    </td>
+                                    <td>
+                                        <input type="file" name="item_image[]" accept="image/*" class="form-control">
+                                    </td>
+                                    <td>
+                                        <input type="number" name="item_price[]" class="form-control item-price" value="{{ item.price }}" step="0.01" min="0" required>
+                                    </td>
+                                    <td>
+                                        <input type="number" name="item_quantity[]" class="form-control item-quantity" value="{{ item.quantity }}" min="1" required>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control item-total" value="{{ item.total }}" readonly>
+                                    </td>
+                                    <td class="text-center">
+                                        <i class="fas fa-trash delete-item"></i>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr class="item-row">
+                                    <td>
+                                        <input type="text" name="item_name[]" class="form-control" required>
+                                    </td>
+                                    <td>
+                                        <input type="file" name="item_image[]" accept="image/*" class="form-control">
+                                    </td>
+                                    <td>
+                                        <input type="number" name="item_price[]" class="form-control item-price" step="0.01" min="0" required>
+                                    </td>
+                                    <td>
+                                        <input type="number" name="item_quantity[]" class="form-control item-quantity" value="1" min="1" required>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control item-total" value="0" readonly>
+                                    </td>
+                                    <td class="text-center">
+                                        <i class="fas fa-trash delete-item"></i>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <button type="button" id="addItemBtn" class="btn add-item-btn mt-2">
+                    <i class="fas fa-plus-circle me-2"></i> Add Item
+                </button>
+            </div>
+        </div>
+        
+        <!-- Totals Section -->
+        <div class="row">
+            <div class="col-md-6 ms-auto">
+                <div class="total-section">
+                    <div class="total-line">
+                        <span>Subtotal:</span>
+                        <span><span class="currency-symbol">₦</span><span id="subtotal">0.00</span></span>
+                    </div>
+                    <div class="total-line">
+                        <span>VAT (%):</span>
+                        <div style="width: 100px;">
+                            <input type="number" name="vat_percentage" id="vatPercentage" class="form-control" value="{{ invoice.vat_percentage|default:7.5 }}" min="0" max="100" step="0.01">
+                        </div>
+                    </div>
+                    <div class="total-line">
+                        <span>VAT Amount:</span>
+                        <span><span class="currency-symbol">₦</span><span id="vatAmount">0.00</span></span>
+                    </div>
+                    <div class="total-line grand-total">
+                        <span>Total:</span>
+                        <span><span class="currency-symbol">₦</span><span id="grandTotal">0.00</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notes Section -->
+        <div class="card shadow-sm mb-4 mt-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Notes</h5>
+                <textarea name="notes" class="form-control" rows="3" placeholder="Add any additional notes or payment instructions here...">{{ invoice.notes }}</textarea>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="d-flex justify-content-end mt-4">
+            <button type="button" class="btn btn-outline-secondary me-2 action-btn">Cancel</button>
+            <button type="submit" class="btn btn-success action-btn pulse-animation">
+                <i class="fas fa-save me-2"></i> {% if invoice.id %}Update{% else %}Save{% endif %} Invoice
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const isExisting = {{ invoice.id|yesno:'true,false' }};
+        
+        // Currency selection handler
+        const currencySelect = document.querySelector('select[name="currency"]');
+        const priceHeader = document.querySelector('.price-header');
+        const totalHeader = document.querySelector('.total-header');
+        
+        function updateCurrencyDisplay() {
+            const selectedCurrency = currencySelect.value;
+            const currencySymbols = {
+                'NGN': '₦',
+                'USD': '$',
+                'EUR': '€',
+                'GBP': '£',
+                'CAD': 'C$',
+                'AUD': 'A$'
+            };
+            
+            const symbol = currencySymbols[selectedCurrency];
+            
+            // Update table headers
+            priceHeader.textContent = `Price (${selectedCurrency})`;
+            totalHeader.textContent = `Total (${selectedCurrency})`;
+            
+            // Update totals section currency symbols
+            document.querySelectorAll('.currency-symbol').forEach(el => {
+                el.textContent = symbol;
+            });
+        }
+        
+        // Update on currency change
+        if (currencySelect) {
+            currencySelect.addEventListener('change', updateCurrencyDisplay);
+            // Initial update
+            updateCurrencyDisplay();
+        }
+        
+        // Form validation for duplicate invoice numbers
+        document.getElementById('invoiceForm').addEventListener('submit', function(e) {
+            const invoiceNumberInput = document.querySelector('input[name="invoice_number"]');
+            const invoiceNumber = invoiceNumberInput.value.trim();
+            
+            if (invoiceNumber) {
+                // Check if this is a new invoice (not editing existing)
+                const isEditing = {{ invoice.id|yesno:'true,false' }};
+                if (!isEditing) {
+                    // For new invoices, check if number already exists
+                    fetch(`/invoices/check-number/?number=${encodeURIComponent(invoiceNumber)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.exists) {
+                                e.preventDefault();
+                                alert(`Invoice number "${invoiceNumber}" has already been used. Please choose a different number.`);
+                                invoiceNumberInput.focus();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error checking invoice number:', error);
+                        });
+                }
+            }
+        });
+        
+        // Add new item row
+        document.getElementById('addItemBtn').addEventListener('click', function() {
+            const tbody = document.querySelector('#itemsTable tbody');
+            const newRow = document.createElement('tr');
+            newRow.className = 'item-row';
+            newRow.innerHTML = `
+                <td>
+                    <input type="text" name="item_name[]" class="form-control" required>
+                </td>
+                <td>
+                    <input type="file" name="item_image[]" accept="image/*" class="form-control">
+                </td>
+                <td>
+                    <input type="number" name="item_price[]" class="form-control item-price" step="0.01" min="0" required>
+                </td>
+                <td>
+                    <input type="number" name="item_quantity[]" class="form-control item-quantity" value="1" min="1" required>
+                </td>
+                <td>
+                    <input type="number" class="form-control item-total" value="0" readonly>
+                </td>
+                <td class="text-center">
+                    <i class="fas fa-trash delete-item"></i>
+                </td>
+            `;
+            tbody.appendChild(newRow);
+            attachEventListeners(newRow);
+        });
+        
+        // Delete item row
+        function attachDeleteListeners() {
+            document.querySelectorAll('.delete-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const tbody = document.querySelector('#itemsTable tbody');
+                    if (tbody.children.length > 1) {
+                        this.closest('tr').remove();
+                        calculateTotals();
+                    } else {
+                        alert('You need at least one item.');
+                    }
+                });
+            });
+        }
+        
+        // Calculate item total
+        function attachEventListeners(row) {
+            const priceInput = row.querySelector('.item-price');
+            const quantityInput = row.querySelector('.item-quantity');
+            const totalInput = row.querySelector('.item-total');
+            const deleteBtn = row.querySelector('.delete-item');
+            
+            function updateItemTotal() {
+                const price = parseFloat(priceInput.value) || 0;
+                const quantity = parseInt(quantityInput.value) || 0;
+                const total = price * quantity;
+                totalInput.value = total.toFixed(2);
+                calculateTotals();
+            }
+            
+            priceInput.addEventListener('input', updateItemTotal);
+            quantityInput.addEventListener('input', updateItemTotal);
+            
+            deleteBtn.addEventListener('click', function() {
+                const tbody = document.querySelector('#itemsTable tbody');
+                if (tbody.children.length > 1) {
+                    row.remove();
+                    calculateTotals();
+                } else {
+                    alert('You need at least one item.');
+                }
+            });
+        }
+        
+        // Attach event listeners to existing rows
+        document.querySelectorAll('#itemsTable tbody tr').forEach(row => {
+            attachEventListeners(row);
+        });
+        
+        // Calculate all totals
+        function calculateTotals() {
+            let subtotal = 0;
+            document.querySelectorAll('.item-total').forEach(item => {
+                subtotal += parseFloat(item.value) || 0;
+            });
+            
+            const vatPercentage = parseFloat(document.getElementById('vatPercentage').value) || 0;
+            const vatAmount = subtotal * (vatPercentage / 100);
+            const grandTotal = subtotal + vatAmount;
+            
+            document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+            document.getElementById('vatAmount').textContent = vatAmount.toFixed(2);
+            document.getElementById('grandTotal').textContent = grandTotal.toFixed(2);
+        }
+        
+        // Update totals when VAT percentage changes
+        document.getElementById('vatPercentage').addEventListener('input', calculateTotals);
+        
+        // Initial calculation
+        calculateTotals();
+        
+        // Set default due date (30 days from today) if not already set
+        const dueDateInput = document.querySelector('input[name="due_date"]');
+        if (!dueDateInput.value) {
+            const today = new Date();
+            const thirtyDaysLater = new Date(today);
+            thirtyDaysLater.setDate(today.getDate() + 30);
+            
+            const year = thirtyDaysLater.getFullYear();
+            const month = String(thirtyDaysLater.getMonth() + 1).padStart(2, '0');
+            const day = String(thirtyDaysLater.getDate()).padStart(2, '0');
+            dueDateInput.value = `${year}-${month}-${day}`;
+        }
+        
+        // Remove this code block that was making existing invoices read-only
+    });
+</script>
+{% endblock %}

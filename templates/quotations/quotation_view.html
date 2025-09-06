@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}View Quotation{% endblock %}
+
+{% block extra_css %}
+<style>
+    .quotation-header {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .item-row {
+        transition: all 0.2s;
+    }
+    
+    .item-row:hover {
+        background-color: rgba(76, 175, 80, 0.05);
+    }
+    
+    .total-section {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+    }
+    
+    .total-line {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+    
+    .grand-total {
+        font-size: 1.2rem;
+        font-weight: bold;
+        border-top: 2px solid #dee2e6;
+        padding-top: 10px;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">View Quotation</h1>
+        <div>
+            <a href="{% url 'quotation_list' %}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left me-2"></i> Back to List
+            </a>
+            <a href="{% url 'quotation_pdf' quotation.id %}" class="btn btn-outline-primary me-2" target="_blank">
+                <i class="fas fa-file-pdf me-2"></i> Export PDF
+            </a>
+            <a href="{% url 'quotation_convert' quotation.id %}?redirect=view" class="btn btn-outline-success">
+                <i class="fas fa-file-invoice me-2"></i> Convert to Invoice
+            </a>
+        </div>
+    </div>
+    
+    <!-- Client Information Section -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Client Information</h5>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Client Name</label>
+                    <p class="form-control-plaintext">{{ quotation.client_name }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Quotation Number</label>
+                    <p class="form-control-plaintext">{{ quotation.quotation_number }}</p>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Created Date</label>
+                    <p class="form-control-plaintext">{{ quotation.date_created|date:'Y-m-d' }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">RFQ Number</label>
+                    <p class="form-control-plaintext">{{ quotation.rfq_number }}</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Vessel Name</label>
+                    <p class="form-control-plaintext">{{ quotation.vessel_name }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Additional Notes / Payment Instructions</label>
+                    <p class="form-control-plaintext">{{ quotation.notes }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Items Section -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Items</h5>
+            
+            <div class="table-responsive">
+                <table class="table" id="itemsTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 35%">Description</th>
+                            <th style="width: 15%">Image</th>
+                            <th style="width: 15%">Price (₦)</th>
+                            <th style="width: 15%">Quantity</th>
+                            <th style="width: 15%">Lead Time</th>
+                            <th style="width: 20%">Total (₦)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in quotation.items.all %}
+                        <tr class="item-row">
+                            <td>{{ item.name }}</td>
+                            <td>
+                                {% if item.image %}
+                                <img src="{{ item.image.url }}" alt="{{ item.name }}" style="max-height: 50px;">
+                                {% else %}
+                                <span class="text-muted">No image</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.price }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.lead_time }}</td>
+                            <td>{{ item.total }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Totals Section -->
+    <div class="row">
+        <div class="col-md-6 ms-auto">
+            <div class="total-section">
+                <div class="total-line">
+                    <span>Subtotal:</span>
+                    <span>{{quotation.currency }}{{ quotation.subtotal }}</span>
+                </div>
+                <div class="total-line">
+                    <span>VAT ({{ quotation.vat_percentage }}%):</span>
+                    <span>{{ quotation.currency }}{{ quotation.vat_amount }}</span>
+                </div>
+                <div class="total-line grand-total">
+                    <span>Total:</span>
+                    <span>{{ quotation.currency }}{{ quotation.total }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

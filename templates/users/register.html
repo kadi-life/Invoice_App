@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register | Invoice & Quotation System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .register-container {
+        max-width: 550px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .register-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .register-header {
+        background: white;
+        color: #333;
+        padding: 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .register-body {
+        padding: 2rem;
+    }
+    
+    .form-floating {
+        margin-bottom: 1.5rem;
+    }
+    
+    .btn-register {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 1.1rem;
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .btn-register:hover {
+        background-color: #218838;
+        border-color: #218838;
+    }
+    
+    .register-footer {
+        text-align: center;
+        margin-top: 1.5rem;
+    }
+    
+    .register-animation {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+    }
+    
+    .register-header h2 {
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* Logo container styles */
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="register-container">
+    <div class="card register-card">
+        <div class="register-header">
+            <div id="header-animation" class="register-animation"></div>
+            <h2 class="mb-0">Create Account</h2>
+        </div>
+        <div class="register-body">
+            <div class="logo-container text-center">
+            <img src="{% static 'images/skids_logo.png' %}" alt="SKIDS Logo" class="main-logo" style="max-width: 150px; margin-bottom: 20px; background: white; padding: 10px; border-radius: 8px;">
+            <h3 class="mb-4" style="color: #333;">Register New User</h3>
+        </div>
+            
+            <form method="post" action="{% url 'register' %}" onsubmit="return validateRegistrationForm()">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            {{ form.first_name }}
+                            <label>First Name</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            {{ form.last_name }}
+                            <label>Last Name</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-floating">
+                    {{ form.email }}
+                    <label>Email</label>
+                </div>
+                <div class="form-floating">
+                    {{ form.role }}
+                    <label>Role</label>
+                </div>
+                <div class="form-floating">
+                    {{ form.password1 }}
+                    <label>Password</label>
+                </div>
+                <div class="form-floating">
+                    {{ form.password2 }}
+                    <label>Confirm Password</label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-register mt-3">
+                    <i class="fas fa-user-plus me-2"></i>Register
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function validateRegistrationForm() {
+        // Validate first name
+        const firstName = document.querySelector('input[name="first_name"]').value.trim();
+        if (!firstName) {
+            showValidationError('Please enter your first name');
+            return false;
+        }
+        
+        // Validate last name
+        const lastName = document.querySelector('input[name="last_name"]').value.trim();
+        if (!lastName) {
+            showValidationError('Please enter your last name');
+            return false;
+        }
+        
+        // Validate email
+        const email = document.querySelector('input[name="email"]').value.trim();
+        if (!email) {
+            showValidationError('Please enter your email address');
+            return false;
+        }
+        
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            showValidationError('Please enter a valid email address');
+            return false;
+        }
+        
+        // Validate role
+        const role = document.querySelector('select[name="role"]').value;
+        if (!role) {
+            showValidationError('Please select a role');
+            return false;
+        }
+        
+        // Validate password
+        const password1 = document.querySelector('input[name="password1"]').value;
+        if (!password1) {
+            showValidationError('Please enter a password');
+            return false;
+        }
+        
+        // Validate password strength
+        if (password1.length < 8) {
+            showValidationError('Password must be at least 8 characters long');
+            return false;
+        }
+        
+        // Validate password confirmation
+        const password2 = document.querySelector('input[name="password2"]').value;
+        if (!password2) {
+            showValidationError('Please confirm your password');
+            return false;
+        }
+        
+        // Validate passwords match
+        if (password1 !== password2) {
+            showValidationError('Passwords do not match');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    function showValidationError(message) {
+        // Create alert element
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show shadow-sm';
+        alertDiv.role = 'alert';
+        alertDiv.innerHTML = `
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <strong>Error:</strong> ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        // Insert at the top of the form
+        const form = document.querySelector('form');
+        form.parentNode.insertBefore(alertDiv, form);
+        
+        // Scroll to the top
+        window.scrollTo(0, 0);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            alertDiv.querySelector('.btn-close').click();
+        }, 5000);
+    }
+</script>
+{% endblock %}

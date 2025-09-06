@@ -1,0 +1,136 @@
+/* Sidebar Styles */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 250px;
+    background-color: var(--primary-color);
+    color: white;
+    transition: all 0.3s;
+    z-index: 1000;
+    box-shadow: 3px 0 10px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+}
+
+.sidebar.collapsed {
+    width: 60px;
+}
+
+.sidebar-header {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.sidebar.collapsed .sidebar-header h3 {
+    display: none;
+}
+
+.sidebar-toggle {
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.sidebar-menu {
+    padding: 0;
+    list-style: none;
+    margin-top: 20px;
+}
+
+.sidebar-menu li {
+    margin-bottom: 5px;
+}
+
+.sidebar-menu a {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.sidebar-menu a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-menu a.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-left: 4px solid white;
+}
+
+.sidebar-menu i {
+    margin-right: 15px;
+    width: 20px;
+    text-align: center;
+}
+
+.sidebar.collapsed .sidebar-menu span {
+    display: none;
+}
+
+.sidebar-footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    padding: 15px;
+    background-color: rgba(0, 0, 0, 0.1);
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+.sidebar.collapsed .sidebar-footer {
+    display: none;
+}
+
+/* Main content adjustment */
+.main-content {
+    margin-left: 250px;
+    transition: all 0.3s;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content.expanded {
+    margin-left: 60px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 0;
+        box-shadow: none;
+    }
+    
+    .sidebar.collapsed {
+        width: 0;
+    }
+    
+    .sidebar.expanded {
+        width: 250px;
+        box-shadow: 3px 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+    
+    .main-content.expanded {
+        margin-left: 0;
+    }
+}
+
+/* Dark mode adjustments removed */

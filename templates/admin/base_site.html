@@ -1,0 +1,51 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block extrastyle %}
+<style>
+    .custom-admin-header {
+        background: #28a745;
+        color: white;
+        padding: 10px 20px;
+        margin: -20px -20px 20px -20px;
+        border-radius: 0;
+    }
+    .custom-admin-header a {
+        color: white;
+        text-decoration: none;
+        margin-right: 20px;
+    }
+    .custom-admin-header a:hover {
+        color: #e9ecef;
+        text-decoration: underline;
+    }
+    .admin-notice {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block nav-global %}
+<div class="custom-admin-header">
+    <a href="{% url 'admin:index' %}">Admin Home</a>
+    {% if user.is_superuser %}
+        <a href="{% url 'admin_dashboard' %}">Custom Admin Dashboard</a>
+    {% endif %}
+    <a href="{% url 'dashboard' %}">Back to App</a>
+</div>
+
+{% if not user.is_superuser %}
+<div class="admin-notice">
+    <strong>Limited Access:</strong> You are logged in as a staff user. 
+    For full administrative access, please contact a superuser or use the 
+    <a href="{% url 'admin_dashboard' %}">Custom Admin Dashboard</a>.
+</div>
+{% endif %}
+{% endblock %}
