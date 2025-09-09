@@ -38,9 +38,16 @@ MIDDLEWARE = [
     'users.middleware.CacheControlMiddleware',
 ]
 
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/4.2/howto/static-files/
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'  # ✅ fix for Vercel
+
 # Add Whitenoise Middleware settings
 WHITENOISE_USE_FINDERS = True
-WHITENOISE_ROOT = STATIC_ROOT
+WHITENOISE_ROOT = STATIC_ROOT  # Now STATIC_ROOT is defined before this reference
 WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds
 
 ROOT_URLCONF = 'invoice_project.urls'
@@ -68,13 +75,22 @@ WSGI_APPLICATION = 'invoice_project.wsgi.application'
 # --------------------
 NEON_DATABASE_URL = "postgresql://neondb_owner:npg_xsSl9Xehk1qR@ep-tiny-haze-adklh2w6-pooler.c-2.us-east-1.aws.neon.tech/Invoicer_App%20DB?sslmode=require&channel_binding=require"
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=NEON_DATABASE_URL if os.environ.get('VERCEL_ENV') else f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}",
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
-}
+# Use SQLite for local development and PostgreSQL for production
+if DEBUG and not os.environ.get('VERCEL_ENV'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
+    }
+else:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=NEON_DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
 
 # --------------------
 # PASSWORD VALIDATORS
@@ -97,10 +113,7 @@ USE_TZ = True
 # --------------------
 # STATIC FILES
 # --------------------
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'  # ✅ fix for Vercel
+# Static file settings are defined at the top of the file
 
 # --------------------
 # MEDIA FILES (Supabase S3)
