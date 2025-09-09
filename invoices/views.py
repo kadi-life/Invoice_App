@@ -178,6 +178,30 @@ def mark_as_paid(request, pk):
     return redirect('invoice_detail', pk=pk)
 
 @login_required
+def update_invoice_status(request, pk):
+    """Update only the status of an invoice"""
+    if request.user.is_staff:
+        invoice = get_object_or_404(Invoice, pk=pk)
+    else:
+        invoice = get_object_or_404(Invoice, pk=pk, user=request.user)
+    
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        if new_status in dict(Invoice.STATUS_CHOICES):
+            invoice.status = new_status
+            invoice.save()
+            messages.success(request, f'Invoice status updated to {invoice.get_status_display()}')
+        else:
+            messages.error(request, 'Invalid status value')
+        return redirect('view_invoice', pk=pk)
+    
+    context = {
+        'invoice': invoice,
+        'status_choices': Invoice.STATUS_CHOICES,
+    }
+    return render(request, 'invoices/update_status.html', context)
+
+@login_required
 def export_invoice_pdf(request, pk):
     if request.user.is_staff:
         invoice = get_object_or_404(Invoice, pk=pk)

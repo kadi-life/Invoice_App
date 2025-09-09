@@ -41,6 +41,11 @@ class RegisterView(CreateView):
         user.save()
         messages.success(self.request, f'User {form.cleaned_data.get("email")} has been registered successfully.')
         return redirect(self.success_url)
+        
+    def form_invalid(self, form):
+        # Log form errors for debugging in production
+        print(f"Form errors: {form.errors}")
+        return super().form_invalid(form)
 
 def login_view(request):
     if request.method == 'POST':

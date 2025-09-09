@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Update Invoice Status{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-update-container {
+        max-width: 600px;
+        margin: 2rem auto;
+        padding: 2rem;
+    }
+    
+    .status-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .status-header {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 15px 15px 0 0;
+    }
+    
+    .status-body {
+        padding: 2rem;
+    }
+    
+    .btn-update {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .btn-update:hover {
+        background-color: #218838;
+        border-color: #218838;
+    }
+    
+    .invoice-info {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .current-status {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-weight: bold;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+    
+    .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-paid {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .status-overdue {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="status-update-container">
+    <div class="card status-card">
+        <div class="status-header">
+            <h4 class="mb-0">Update Invoice Status</h4>
+        </div>
+        <div class="status-body">
+            <div class="invoice-info">
+                <h5>Invoice #{{ invoice.invoice_number }}</h5>
+                <p><strong>Client:</strong> {{ invoice.client_name }}</p>
+                <p><strong>Total Amount:</strong> {{ invoice.currency }} {{ invoice.total }}</p>
+                <p>
+                    <strong>Current Status:</strong>
+                    <span class="current-status status-{{ invoice.status|lower }}">
+                        {% if invoice.is_overdue %}
+                            Overdue
+                        {% else %}
+                            {{ invoice.get_status_display }}
+                        {% endif %}
+                    </span>
+                </p>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="status" class="form-label">New Status</label>
+                    <select name="status" id="status" class="form-select" required>
+                        {% for status_code, status_name in status_choices %}
+                            <option value="{{ status_code }}" {% if invoice.status == status_code %}selected{% endif %}>
+                                {{ status_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'view_invoice' invoice.id %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-update">
+                        <i class="fas fa-check me-2"></i> Update Status
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

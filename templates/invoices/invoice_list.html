@@ -224,7 +224,7 @@
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 {% if invoice.user == request.user or request.user.is_staff %}
-                                                <a href="{% url 'invoice_edit' invoice.id %}" class="btn btn-sm btn-outline-warning me-1" title="Edit">
+                                                <a href="{% url 'update_invoice_status' invoice.id %}" class="btn btn-sm btn-outline-warning me-1" title="Update Status">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                                 {% endif %}
