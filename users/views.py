@@ -251,7 +251,6 @@ def admin_user_toggle_active(request, pk):
     return response
 
 @login_required
-@user_passes_test(is_staff_user)
 def profile(request):
     if request.method == 'POST':
         # Handle profile update
@@ -262,9 +261,27 @@ def profile(request):
             
             # Handle profile picture upload
             if 'profile_picture' in request.FILES:
-                user.profile_picture = request.FILES['profile_picture']
+                try:
+                    # Delete old profile picture if it exists
+                    if user.profile_picture:
+                        try:
+                            user.profile_picture.delete(save=False)
+                        except Exception as e:
+                            # Log the error but continue
+                            print(f"Error deleting old profile picture: {e}")
+                    
+                    # Save new profile picture
+                    user.profile_picture = request.FILES['profile_picture']
+                    messages.success(request, 'Profile picture updated successfully')
+                except Exception as e:
+                    messages.error(request, f'Error updating profile picture: {e}')
+            
+            try:
+                user.save()
+                messages.success(request, 'Profile updated successfully')
+            except Exception as e:
+                messages.error(request, f'Error updating profile: {e}')
                 
-            user.save()
             response = redirect('profile')
             # Add cache control headers
             response['Cache-Control'] = 'no-cache, no-store, must-revalidate'

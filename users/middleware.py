@@ -7,6 +7,11 @@ class CacheControlMiddleware(MiddlewareMixin):
     """
     
     def process_response(self, request, response):
+        # Skip static and media files
+        path = request.path_info.lstrip('/')
+        if path.startswith('static/') or path.startswith('media/'):
+            return response
+            
         # Add cache control headers to all authenticated requests
         if request.user.is_authenticated:
             response['Cache-Control'] = 'no-cache, no-store, must-revalidate, private'
