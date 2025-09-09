@@ -8,7 +8,7 @@ SECRET_KEY = 'django-insecure-)pzbpjk*m#@$=9^izz1bbg8i-&t*ejy4=iwhqs&l)_qpi3r-ny
 
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.vercel.app']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.vercel.app', '.onrender.com']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -43,11 +43,11 @@ MIDDLEWARE = [
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'  # ✅ fix for Vercel
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # Add Whitenoise Middleware settings
 WHITENOISE_USE_FINDERS = True
-WHITENOISE_ROOT = STATIC_ROOT  # Now STATIC_ROOT is defined before this reference
+WHITENOISE_ROOT = STATIC_ROOT
 WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds
 
 ROOT_URLCONF = 'invoice_project.urls'
@@ -76,7 +76,7 @@ WSGI_APPLICATION = 'invoice_project.wsgi.application'
 NEON_DATABASE_URL = "postgresql://neondb_owner:npg_xsSl9Xehk1qR@ep-tiny-haze-adklh2w6-pooler.c-2.us-east-1.aws.neon.tech/Invoicer_App%20DB?sslmode=require&channel_binding=require"
 
 # Use SQLite for local development and PostgreSQL for production
-if DEBUG and not os.environ.get('VERCEL_ENV'):
+if DEBUG and not (os.environ.get('VERCEL_ENV') or os.environ.get('RENDER')):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -86,7 +86,7 @@ if DEBUG and not os.environ.get('VERCEL_ENV'):
 else:
     DATABASES = {
         'default': dj_database_url.config(
-            default=NEON_DATABASE_URL,
+            default=os.environ.get('DATABASE_URL', NEON_DATABASE_URL),
             conn_max_age=600,
             conn_health_checks=True,
         )
@@ -118,15 +118,16 @@ USE_TZ = True
 # --------------------
 # MEDIA FILES (Supabase S3)
 # --------------------
-# Always use S3 storage in production (Vercel)
-if not DEBUG or os.environ.get('VERCEL_ENV'):
+# Media storage configuration
+# Use S3 storage in production (Vercel or Render)
+if not DEBUG or os.environ.get('VERCEL_ENV') or os.environ.get('RENDER'):
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
     AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
     AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
     AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME", "media")
     AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME", "eu-north-1")
-    AWS_S3_ENDPOINT_URL = os.environ.get("AWS_S3_ENDPOINT_URL", "https://mujgzkhcibgoqxjxlhhi.storage.supabase.co/storage/v1/s3")
-    AWS_S3_CUSTOM_DOMAIN = os.environ.get("AWS_S3_CUSTOM_DOMAIN", "mujgzkhcibgoqxjxlhhi.storage.supabase.co")
+    AWS_S3_ENDPOINT_URL = os.environ.get("AWS_S3_ENDPOINT_URL")
+    AWS_S3_CUSTOM_DOMAIN = os.environ.get("AWS_S3_CUSTOM_DOMAIN")
     AWS_S3_OBJECT_PARAMETERS = {
         'CacheControl': 'max-age=86400',
     }
