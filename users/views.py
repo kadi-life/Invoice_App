@@ -44,7 +44,17 @@ class RegisterView(CreateView):
         
     def form_invalid(self, form):
         # Log form errors for debugging in production
-        print(f"Form errors: {form.errors}")
+        import logging
+        logger = logging.getLogger('users')
+        logger.error(f"User registration form errors: {form.errors}")
+        logger.error(f"Request POST data: {self.request.POST}")
+        logger.error(f"CSRF token in POST: {'csrfmiddlewaretoken' in self.request.POST}")
+        logger.error(f"CSRF cookie present: {'CSRF_COOKIE' in self.request.META}")
+        
+        # Add error message for user
+        from django.contrib import messages
+        messages.error(self.request, f"Registration failed. Please check the form for errors.")
+        
         return super().form_invalid(form)
 
 def login_view(request):

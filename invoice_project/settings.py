@@ -200,6 +200,12 @@ CRISPY_TEMPLATE_PACK = 'bootstrap5'
 VAT_PERCENTAGE = 7.5
 DEFAULT_FROM_EMAIL = 'no-reply@example.com'
 
+# CSRF Settings
+CSRF_COOKIE_SECURE = env.bool('CSRF_COOKIE_SECURE', default=not DEBUG)
+SESSION_COOKIE_SECURE = env.bool('SESSION_COOKIE_SECURE', default=not DEBUG)
+CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=['https://*.onrender.com'])
+
+# Email Settings
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
     EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'

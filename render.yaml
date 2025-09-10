@@ -17,6 +17,12 @@ services:
         fromDatabase:
           name: invoice-db
           property: connectionString
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://*.onrender.com
+      - key: CSRF_COOKIE_SECURE
+        value: True
+      - key: SESSION_COOKIE_SECURE
+        value: True
 
 databases:
   - name: invoice-db
