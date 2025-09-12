@@ -208,9 +208,9 @@ VAT_PERCENTAGE = 7.5
 DEFAULT_FROM_EMAIL = 'no-reply@example.com'
 
 # CSRF Settings
-CSRF_COOKIE_SECURE = env.bool('CSRF_COOKIE_SECURE', default=not DEBUG)
-SESSION_COOKIE_SECURE = env.bool('SESSION_COOKIE_SECURE', default=not DEBUG)
-CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=['https://*.onrender.com'])
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
 
 # Email Settings
 if DEBUG:
