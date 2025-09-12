@@ -206,7 +206,7 @@ DEFAULT_FROM_EMAIL = 'no-reply@example.com'
 # CSRF Settings
 CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
-CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
+CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com', 'https://invoice-app-840p.onrender.com']
 
 # Email Settings
 if DEBUG:

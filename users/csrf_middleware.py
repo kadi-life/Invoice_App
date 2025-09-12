@@ -12,9 +12,9 @@ class EnhancedCsrfMiddleware(CsrfViewMiddleware):
     """
     
     def process_view(self, request, callback, callback_args, callback_kwargs):
-        # Skip CSRF checks for registration in production environment
-        if os.environ.get('RENDER') and request.path == '/register/' and request.method == 'POST':
-            logger.info(f"Bypassing CSRF check for registration in production environment")
+        # Skip CSRF checks for registration and login in production environment
+        if os.environ.get('RENDER') and request.method == 'POST' and (request.path == '/register/' or request.path == '/login/'):
+            logger.info(f"Bypassing CSRF check for {request.path} in production environment")
             return None
             
         # Call the parent method to perform the actual CSRF check
