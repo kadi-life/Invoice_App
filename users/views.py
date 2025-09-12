@@ -35,12 +35,19 @@ class RegisterView(CreateView):
 
     def form_valid(self, form):
         # Ensure Admin role sets is_staff
-        user = form.save(commit=False)
-        if user.role == 'Admin':
-            user.is_staff = True
-        user.save()
-        messages.success(self.request, f'User {form.cleaned_data.get("email")} has been registered successfully.')
-        return redirect(self.success_url)
+        try:
+            user = form.save(commit=False)
+            if user.role == 'Admin':
+                user.is_staff = True
+            user.save()
+            messages.success(self.request, f'User {form.cleaned_data.get("email")} has been registered successfully.')
+            return redirect(self.success_url)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger('users')
+            logger.error(f"Exception during user registration: {str(e)}")
+            messages.error(self.request, f"Registration failed due to an error: {str(e)}")
+            return self.render_to_response(self.get_context_data(form=form))
         
     def form_invalid(self, form):
         # Log form errors for debugging in production
@@ -53,7 +60,9 @@ class RegisterView(CreateView):
         
         # Add error message for user
         from django.contrib import messages
-        messages.error(self.request, f"Registration failed. Please check the form for errors.")
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f"{field}: {error}")
         
         return super().form_invalid(form)
 

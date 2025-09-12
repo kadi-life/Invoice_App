@@ -31,8 +31,8 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',  # serves static files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    # Replace default CSRF middleware with our enhanced version
-    # 'django.middleware.csrf.CsrfViewMiddleware',
+    # Use both the default CSRF middleware and our enhanced version
+    'django.middleware.csrf.CsrfViewMiddleware',
     'users.csrf_middleware.EnhancedCsrfMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -123,11 +123,18 @@ if DEBUG and not (os.environ.get('VERCEL_ENV') or os.environ.get('RENDER')):
         }
     }
 else:
+    # For production environments
+    database_url = os.environ.get('DATABASE_URL')
+    if not database_url:
+        database_url = NEON_DATABASE_URL
+        print(f"WARNING: Using default NEON_DATABASE_URL as DATABASE_URL environment variable is not set")
+    
     DATABASES = {
         'default': dj_database_url.config(
-            default=os.environ.get('DATABASE_URL', NEON_DATABASE_URL),
+            default=database_url,
             conn_max_age=600,
             conn_health_checks=True,
+            ssl_require=True,
         )
     }
 
