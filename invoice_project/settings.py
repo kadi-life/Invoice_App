@@ -141,12 +141,8 @@ else:
 # --------------------
 # PASSWORD VALIDATORS
 # --------------------
-AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
-]
+# Removed password validators to allow any password
+AUTH_PASSWORD_VALIDATORS = []
 
 # --------------------
 # INTERNATIONALIZATION
