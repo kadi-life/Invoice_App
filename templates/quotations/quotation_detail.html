@@ -133,7 +133,7 @@
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Quotation Number</label>
-                        <input type="text" name="quotation_number" class="form-control" value="{{ quotation.quotation_number }}" placeholder="e.g., QT-2024-001" required>
+                        <input type="text" name="quotation_number" class="form-control" value="{{ quotation.quotation_number }}" placeholder="e.g., QUOTATION-2024-001" required>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Client Name</label>
@@ -195,7 +195,17 @@
                                         <input type="number" name="item_price[]" class="form-control item-price" value="{{ item.price }}" step="0.01" min="0" required>
                                     </td>
                                     <td>
-                                        <input type="number" name="item_quantity[]" class="form-control item-quantity" value="{{ item.quantity }}" min="1" required>
+                                        <div class="d-flex">
+                                            <input type="number" name="item_quantity[]" class="form-control item-quantity" value="{{ item.quantity }}" min="1" required style="width: 60%">
+                                            <select name="item_unit[]" class="form-select ms-1" style="width: 40%">
+                                                <option value="EA" {% if item.unit == 'EA' %}selected{% endif %}>EA</option>
+                                                <option value="PCS" {% if item.unit == 'PCS' %}selected{% endif %}>PCS</option>
+                                                <option value="KG" {% if item.unit == 'KG' %}selected{% endif %}>KG</option>
+                                                <option value="LTR" {% if item.unit == 'LTR' %}selected{% endif %}>LTR</option>
+                                                <option value="M" {% if item.unit == 'M' %}selected{% endif %}>M</option>
+                                                <option value="BOX" {% if item.unit == 'BOX' %}selected{% endif %}>BOX</option>
+                                            </select>
+                                        </div>
                                     </td>
                                     <td>
                                         <input type="text" name="item_lead_time[]" class="form-control" value="{{ item.lead_time }}" placeholder="e.g., 1-7 DAYS">
@@ -220,7 +230,17 @@
                                         <input type="number" name="item_price[]" class="form-control item-price" step="0.01" min="0" required>
                                     </td>
                                     <td>
-                                        <input type="number" name="item_quantity[]" class="form-control item-quantity" value="1" min="1" required>
+                                        <div class="d-flex">
+                                            <input type="number" name="item_quantity[]" class="form-control item-quantity" value="1" min="1" required style="width: 60%">
+                                            <select name="item_unit[]" class="form-select ms-1" style="width: 40%">
+                                                <option value="EA" selected>EA</option>
+                                                <option value="PCS">PCS</option>
+                                                <option value="KG">KG</option>
+                                                <option value="LTR">LTR</option>
+                                                <option value="M">M</option>
+                                                <option value="BOX">BOX</option>
+                                            </select>
+                                        </div>
                                     </td>
                                     <td>
                                         <input type="text" name="item_lead_time[]" class="form-control" placeholder="e.g., 1-7 DAYS">
@@ -359,7 +379,17 @@
                     <input type="number" name="item_price[]" class="form-control item-price" step="0.01" min="0" required>
                 </td>
                 <td>
-                    <input type="number" name="item_quantity[]" class="form-control item-quantity" value="1" min="1" required>
+                    <div class="d-flex">
+                        <input type="number" name="item_quantity[]" class="form-control item-quantity" value="1" min="1" required style="width: 60%">
+                        <select name="item_unit[]" class="form-select ms-1" style="width: 40%">
+                            <option value="EA" selected>EA</option>
+                            <option value="PCS">PCS</option>
+                            <option value="KG">KG</option>
+                            <option value="LTR">LTR</option>
+                            <option value="M">M</option>
+                            <option value="BOX">BOX</option>
+                        </select>
+                    </div>
                 </td>
                 <td>
                     <input type="text" name="item_lead_time[]" class="form-control" placeholder="e.g., 1-7 DAYS">

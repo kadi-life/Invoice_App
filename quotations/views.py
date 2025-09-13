@@ -96,12 +96,14 @@ def quotation_detail(request, pk=None):
         item_names = request.POST.getlist('item_name[]')
         item_prices = request.POST.getlist('item_price[]')
         item_quantities = request.POST.getlist('item_quantity[]')
+        item_units = request.POST.getlist('item_unit[]')
         item_lead_times = request.POST.getlist('item_lead_time[]')
         item_images = request.FILES.getlist('item_image[]')
         for i in range(len(item_names)):
             name = item_names[i]
             price_str = item_prices[i] if i < len(item_prices) else ''
             qty_str = item_quantities[i] if i < len(item_quantities) else ''
+            unit = item_units[i] if i < len(item_units) else 'EA'
             lead_time_str = item_lead_times[i] if i < len(item_lead_times) else ''
             if name and price_str and qty_str:
                 try:
@@ -114,6 +116,7 @@ def quotation_detail(request, pk=None):
                     name=name,
                     price=price_val,
                     quantity=qty_val,
+                    unit=unit,
                     image=image_file,
                     lead_time=lead_time_str
                 )
@@ -143,6 +146,15 @@ def quotation_pdf(request, pk):
         'company_website': 'www.skidslogistics.com',
     }
     return render_to_pdf('quotations/quotation_pdf.html', context)
+
+@login_required
+def quotation_docx(request, pk):
+    if request.user.is_staff:
+        quotation = get_object_or_404(Quotation, pk=pk)
+    else:
+        quotation = get_object_or_404(Quotation, pk=pk, user=request.user)
+    from invoices.docx_utils import generate_quotation_docx
+    return generate_quotation_docx(quotation)
 
 @login_required
 def delete_quotation(request, pk):

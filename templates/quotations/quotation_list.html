@@ -136,6 +136,9 @@
                                                 <a href="{% url 'quotation_pdf' quotation.id %}" class="btn btn-sm btn-outline-success me-1" target="_blank" title="PDF">
                                                     <i class="fas fa-file-pdf"></i>
                                                 </a>
+                                                <a href="{% url 'quotation_docx' quotation.id %}" class="btn btn-sm btn-outline-success me-1" target="_blank" title="Word">
+                                                    <i class="fas fa-file-word"></i>
+                                                </a>
                                                 <a href="{% url 'quotation_convert' quotation.id %}" class="btn btn-sm btn-outline-success me-1" title="Convert to Invoice">
                                                     <i class="fas fa-file-invoice"></i>
                                                 </a>

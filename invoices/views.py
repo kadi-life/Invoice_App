@@ -126,11 +126,13 @@ def invoice_detail(request, pk=None):
         item_names = request.POST.getlist('item_name[]')
         item_prices = request.POST.getlist('item_price[]')
         item_quantities = request.POST.getlist('item_quantity[]')
+        item_units = request.POST.getlist('item_unit[]')
         item_images = request.FILES.getlist('item_image[]')
         for i in range(len(item_names)):
             name = item_names[i]
             price_str = item_prices[i] if i < len(item_prices) else ''
             qty_str = item_quantities[i] if i < len(item_quantities) else ''
+            unit = item_units[i] if i < len(item_units) else 'EA'
             if name and price_str and qty_str:
                 try:
                     price_val = Decimal(price_str)
@@ -142,6 +144,7 @@ def invoice_detail(request, pk=None):
                     name=name,
                     price=price_val,
                     quantity=qty_val,
+                    unit=unit,
                     image=image_file
                 )
                 invoice.items.add(item)
@@ -208,6 +211,15 @@ def export_invoice_pdf(request, pk):
     else:
         invoice = get_object_or_404(Invoice, pk=pk, user=request.user)
     return generate_invoice_pdf(invoice)
+
+@login_required
+def export_invoice_docx(request, pk):
+    if request.user.is_staff:
+        invoice = get_object_or_404(Invoice, pk=pk)
+    else:
+        invoice = get_object_or_404(Invoice, pk=pk, user=request.user)
+    from .docx_utils import generate_invoice_docx
+    return generate_invoice_docx(invoice)
 
 @login_required
 def email_invoice(request, pk):

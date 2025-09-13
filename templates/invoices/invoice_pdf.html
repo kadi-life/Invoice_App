@@ -16,6 +16,23 @@
             color: #333;
             margin: 0;
             padding: 0;
+            position: relative;
+        }
+        
+        body::after {
+            content: "SKIDS LOGISTICS";
+            position: fixed;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+            transform: rotate(-45deg);
+            transform-origin: 50% 50%;
+            font-size: 80px;
+            text-align: center;
+            color: #000;
         }
         .header {
             margin-bottom: 20px;
@@ -35,8 +52,8 @@
             margin: 2px 0;
         }
         .company-logo {
-            width: 60px;
-            height: 30px;
+            width: 120px;
+            height: 60px;
             object-fit: contain;
             margin-right: 15px;
         }
@@ -224,7 +241,7 @@
 </head>
 <body>
     <div class="company-header">
-        <div class="company-info">
+        <div class="company-info" style="border: 2px solid #333; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
             <p>NO. 17 Eastern Bypass, Buchi Atako Villa Port Harcourt, T: 07035495280, E: info@skidslogistics.com.</p>
         </div>
     </div>
@@ -240,20 +257,12 @@
     </div>
 
     <div class="invoice-info">
-        <p><strong>Invoice:</strong> {{ invoice.invoice_number|default:invoice.id }}</p>
+        <p><strong>Invoice Number:</strong> {{ invoice.invoice_number|default:invoice.id }}</p>
         <p><strong>Date:</strong> {{ invoice.date_created|date:"d/m/Y" }}</p>
-        <p><strong>Due Date:</strong> {{ invoice.due_date|date:"d/m/Y" }}</p>
-        <p><strong>Status:</strong> 
-            {% if invoice.is_overdue %}
-                Overdue
-            {% else %}
-                {{ invoice.get_status_display }}
-            {% endif %}
-        </p>
     </div>
 
-    <div class="invoice-title" style="border: none";>
-        <span style="text-decoration: underline; font-size: 18px; font-weight: bold; color: #333; border: none";>
+    <div class="invoice-title" style="border: none;">
+        <span style="text-decoration: underline; font-size: 18px; font-weight: bold; color: #333;">
             {{ invoice.invoice_number|default:invoice.id }}
         </span>
     </div>
@@ -277,26 +286,26 @@
                     {% if item.image %}<img src="{{ item.image.url }}" alt="" class="item-image">{% endif %}
                     {{ item.name }}
                 </td>
-                <td>{{ item.quantity }}EA</td>
+                <td>{{ item.quantity }} {{ item.unit|default:'EA' }}</td>
                 <td>
-                    {% if invoice.currency == 'NGN' %}NGN
-                    {% elif invoice.currency == 'USD' %}USD
-                    {% elif invoice.currency == 'EUR' %}EUR
-                    {% elif invoice.currency == 'GBP' %}GBP
-                    {% elif invoice.currency == 'CAD' %}CAD
-                    {% elif invoice.currency == 'AUD' %}AUD
+                    {% if invoice.currency == 'NGN' %}
+                    {% elif invoice.currency == 'USD' %}
+                    {% elif invoice.currency == 'EUR' %}
+                    {% elif invoice.currency == 'GBP' %}
+                    {% elif invoice.currency == 'CAD' %}
+                    {% elif invoice.currency == 'AUD' %}
                     {% endif %}
-                    {{ item.price|floatformat:0 }}
+                    {{ item.price|floatformat:0|intcomma }}
                 </td>
                 <td>
-                    {% if invoice.currency == 'NGN' %}NGN
-                    {% elif invoice.currency == 'USD' %}USD
-                    {% elif invoice.currency == 'EUR' %}EUR
-                    {% elif invoice.currency == 'GBP' %}GBP
-                    {% elif invoice.currency == 'CAD' %}CAD
-                    {% elif invoice.currency == 'AUD' %}AUD
+                    {% if invoice.currency == 'NGN' %}
+                    {% elif invoice.currency == 'USD' %}
+                    {% elif invoice.currency == 'EUR' %}
+                    {% elif invoice.currency == 'GBP' %}
+                    {% elif invoice.currency == 'CAD' %}
+                    {% elif invoice.currency == 'AUD' %}
                     {% endif %}
-                    {{ item.total|floatformat:0 }}
+                    {{ item.total|floatformat:0|intcomma }}
                 </td>
                 <td>{{ item.lead_time|default:"1-7 DAYS" }}</td>
             </tr>
@@ -309,24 +318,24 @@
             <span class="total-label">Subtotal:</span>
             <span class="total-amount">
                 <span class="currency-symbol">
-                {% if invoice.currency == 'NGN' %}NGN{% elif invoice.currency == 'USD' %}USD{% elif invoice.currency == 'EUR' %}EUR{% elif invoice.currency == 'GBP' %}GBP{% elif invoice.currency == 'CAD' %}CAD{% elif invoice.currency == 'AUD' %}AUD{% else %}NGN{% endif %}
-                </span>{{ invoice.subtotal|floatformat:2 }}
+                {% if invoice.currency == 'NGN' %}{% elif invoice.currency == 'USD' %}{% elif invoice.currency == 'EUR' %}{% elif invoice.currency == 'GBP' %}{% elif invoice.currency == 'CAD' %}{% elif invoice.currency == 'AUD' %}{% else %}{% endif %}
+                </span>{{ invoice.subtotal|floatformat:2|intcomma }}
             </span>
         </div>
         <div class="total-row">
             <span class="total-label">VAT ({{ invoice.vat_percentage }}%):</span>
             <span class="total-amount">
                 <span class="currency-symbol">
-                {% if invoice.currency == 'NGN' %}NGN{% elif invoice.currency == 'USD' %}USD{% elif invoice.currency == 'EUR' %}EUR{% elif invoice.currency == 'GBP' %}GBP{% elif invoice.currency == 'CAD' %}CAD{% elif invoice.currency == 'AUD' %}AUD{% else %}NGN{% endif %}
-                </span>{{ invoice.vat_amount|floatformat:2 }}
+                {% if invoice.currency == 'NGN' %}{% elif invoice.currency == 'USD' %}{% elif invoice.currency == 'EUR' %}{% elif invoice.currency == 'GBP' %}{% elif invoice.currency == 'CAD' %}{% elif invoice.currency == 'AUD' %}{% else %}{% endif %}
+                </span>{{ invoice.vat_amount|floatformat:2|intcomma }}
             </span>
         </div>
         <div class="total-row total-grand">
             <span class="total-label">Total:</span>
             <span class="total-amount">
                 <span class="currency-symbol">
-                {% if invoice.currency == 'USD' %}USD{% elif invoice.currency == 'EUR' %}EUR{% elif invoice.currency == 'GBP' %}GBP{% elif invoice.currency == 'CAD' %}CAD{% elif invoice.currency == 'AUD' %}AUD{% else %}NGN{% endif %}
-                </span>{{ invoice.total|floatformat:2 }}
+                {% if invoice.currency == 'USD' %}{% elif invoice.currency == 'EUR' %}{% elif invoice.currency == 'GBP' %}{% elif invoice.currency == 'CAD' %}{% elif invoice.currency == 'AUD' %}{% else %}{% endif %}
+                </span>{{ invoice.total|floatformat:2|intcomma }}
             </span>
         </div>
     </div>
@@ -338,9 +347,6 @@
     </div>
     {% endif %}
 
-    <div class="footer">
-        <p><strong>Thank you for your business!</strong></p>
-        <p>Payment is due on {{ invoice.due_date|date:"F d, Y" }}</p>
-    </div>
+
 </body>
 </html>

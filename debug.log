@@ -1,0 +1,16 @@
+WARNING 2025-09-11 20:48:03,776 log Not Found: /@vite/client
+WARNING 2025-09-11 20:48:03,981 basehttp "GET /@vite/client HTTP/1.1" 404 5857
+WARNING 2025-09-11 20:48:30,019 log Not Found: /@vite/client
+WARNING 2025-09-11 20:48:30,116 basehttp "GET /@vite/client HTTP/1.1" 404 5857
+WARNING 2025-09-11 20:49:06,220 log Not Found: /@vite/client
+WARNING 2025-09-11 20:49:06,228 basehttp "GET /@vite/client HTTP/1.1" 404 5857
+WARNING 2025-09-12 13:32:51,227 log Not Found: /@vite/client
+WARNING 2025-09-12 13:32:51,269 basehttp "GET /@vite/client HTTP/1.1" 404 5857
+WARNING 2025-09-12 13:37:28,251 log Not Found: /@vite/client
+WARNING 2025-09-12 13:37:28,327 basehttp "GET /@vite/client HTTP/1.1" 404 5857
+WARNING 2025-09-12 13:37:46,766 log Not Found: /@vite/client
+WARNING 2025-09-12 13:37:46,829 basehttp "GET /@vite/client HTTP/1.1" 404 5857
+WARNING 2025-09-12 13:37:57,635 log Not Found: /@vite/client
+WARNING 2025-09-12 13:37:57,657 basehttp "GET /@vite/client HTTP/1.1" 404 5857
+WARNING 2025-09-12 13:38:19,634 log Not Found: /@vite/client
+WARNING 2025-09-12 13:38:19,650 basehttp "GET /@vite/client HTTP/1.1" 404 5857

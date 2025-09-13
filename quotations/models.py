@@ -3,9 +3,21 @@ from django.conf import settings
 from django.utils import timezone
 
 class Item(models.Model):
+    UNIT_CHOICES = [
+        ('EA', 'Each'),
+        ('PCS', 'Pieces'),
+        ('KG', 'Kilograms'),
+        ('LTR', 'Liters'),
+        ('M', 'Meters'),
+        ('BOX', 'Box'),
+        ('SET', 'Set'),
+        ('UNIT', 'Unit'),
+    ]
+    
     name = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.PositiveIntegerField(default=1)
+    unit = models.CharField(max_length=10, choices=UNIT_CHOICES, default='EA', verbose_name="Unit")
     image = models.ImageField(upload_to='item_images/', null=True, blank=True)
     lead_time = models.CharField(max_length=50, blank=True, null=True, verbose_name="Lead Time")
     

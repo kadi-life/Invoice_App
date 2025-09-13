@@ -231,6 +231,9 @@
                                                 <a href="{% url 'invoice_pdf' invoice.id %}" class="btn btn-sm btn-outline-primary me-1" target="_blank" title="PDF">
                                                     <i class="fas fa-file-pdf"></i>
                                                 </a>
+                                                <a href="{% url 'invoice_docx' invoice.id %}" class="btn btn-sm btn-outline-primary me-1" target="_blank" title="Word">
+                                                    <i class="fas fa-file-word"></i>
+                                                </a>
                                                 <a href="{% url 'invoice_email' invoice.id %}" class="btn btn-sm btn-outline-info me-1" title="Email">
                                                     <i class="fas fa-envelope"></i>
                                                 </a>

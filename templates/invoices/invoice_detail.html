@@ -195,7 +195,7 @@
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Invoice Number</label>
-                        <input type="text" name="invoice_number" class="form-control" value="{{ invoice.invoice_number }}" placeholder="e.g., INV-2024-001" {% if invoice.id %}readonly{% endif %} required>
+                        <input type="text" name="invoice_number" class="form-control" value="{{ invoice.invoice_number }}" placeholder="e.g., INVOICE-2024-001" {% if invoice.id %}readonly{% endif %} required>
                     </div>
                 </div>
                 
@@ -250,7 +250,17 @@
                                         <input type="number" name="item_price[]" class="form-control item-price" value="{{ item.price }}" step="0.01" min="0" required>
                                     </td>
                                     <td>
-                                        <input type="number" name="item_quantity[]" class="form-control item-quantity" value="{{ item.quantity }}" min="1" required>
+                                        <div class="d-flex">
+                                            <input type="number" name="item_quantity[]" class="form-control item-quantity" value="{{ item.quantity }}" min="1" required style="width: 60%">
+                                            <select name="item_unit[]" class="form-select ms-1" style="width: 40%">
+                                                <option value="EA" {% if item.unit == 'EA' %}selected{% endif %}>EA</option>
+                                                <option value="PCS" {% if item.unit == 'PCS' %}selected{% endif %}>PCS</option>
+                                                <option value="KG" {% if item.unit == 'KG' %}selected{% endif %}>KG</option>
+                                                <option value="LTR" {% if item.unit == 'LTR' %}selected{% endif %}>LTR</option>
+                                                <option value="M" {% if item.unit == 'M' %}selected{% endif %}>M</option>
+                                                <option value="BOX" {% if item.unit == 'BOX' %}selected{% endif %}>BOX</option>
+                                            </select>
+                                        </div>
                                     </td>
                                     <td>
                                         <input type="number" class="form-control item-total" value="{{ item.total }}" readonly>
@@ -272,7 +282,17 @@
                                         <input type="number" name="item_price[]" class="form-control item-price" step="0.01" min="0" required>
                                     </td>
                                     <td>
-                                        <input type="number" name="item_quantity[]" class="form-control item-quantity" value="1" min="1" required>
+                                        <div class="d-flex">
+                                            <input type="number" name="item_quantity[]" class="form-control item-quantity" value="1" min="1" required style="width: 60%">
+                                            <select name="item_unit[]" class="form-select ms-1" style="width: 40%">
+                                                <option value="EA" selected>EA</option>
+                                                <option value="PCS">PCS</option>
+                                                <option value="KG">KG</option>
+                                                <option value="LTR">LTR</option>
+                                                <option value="M">M</option>
+                                                <option value="BOX">BOX</option>
+                                            </select>
+                                        </div>
                                     </td>
                                     <td>
                                         <input type="number" class="form-control item-total" value="0" readonly>
@@ -419,7 +439,17 @@
                     <input type="number" name="item_price[]" class="form-control item-price" step="0.01" min="0" required>
                 </td>
                 <td>
-                    <input type="number" name="item_quantity[]" class="form-control item-quantity" value="1" min="1" required>
+                    <div class="d-flex">
+                        <input type="number" name="item_quantity[]" class="form-control item-quantity" value="1" min="1" required style="width: 60%">
+                        <select name="item_unit[]" class="form-select ms-1" style="width: 40%">
+                            <option value="EA" selected>EA</option>
+                            <option value="PCS">PCS</option>
+                            <option value="KG">KG</option>
+                            <option value="LTR">LTR</option>
+                            <option value="M">M</option>
+                            <option value="BOX">BOX</option>
+                        </select>
+                    </div>
                 </td>
                 <td>
                     <input type="number" class="form-control item-total" value="0" readonly>
