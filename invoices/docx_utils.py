@@ -20,7 +20,8 @@ def add_watermark(document, image_path):
         paragraph = header.paragraphs[0] if header.paragraphs else header.add_paragraph()
         paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
         run = paragraph.add_run()
-        picture = run.add_picture(image_path, width=Inches(4))
+        # Medium-sized logo for watermark
+        picture = run.add_picture(image_path, width=Inches(5))
         # Make the image semi-transparent (this is approximate, not true watermark)
         for child in paragraph._element:
             if child.tag.endswith('drawing'):
@@ -35,6 +36,12 @@ def add_watermark(document, image_path):
                 except:
                     # If we can't set opacity, just leave it as is
                     pass
+        
+        # Add demarcation line
+        line_paragraph = header.add_paragraph()
+        line_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        line_run = line_paragraph.add_run('_' * 100)
+        line_run.font.color.rgb = RGBColor(200, 200, 200)  # Light gray color
 
 def generate_invoice_docx(invoice):
     """Generate a Word document for an invoice"""
@@ -43,6 +50,21 @@ def generate_invoice_docx(invoice):
     # Document properties
     document.core_properties.title = f"Invoice Number {invoice.invoice_number}"
     document.core_properties.author = "Skids LOGISTICS LTD"
+    
+    # Add logo
+    try:
+        logo_path = os.path.join(settings.STATIC_ROOT, 'images/skids_logo.png')
+        if not os.path.exists(logo_path):
+            # Fallback to old path if new path doesn't exist
+            logo_path = os.path.join(settings.STATIC_ROOT, 'img/logo.png')
+        if os.path.exists(logo_path):
+            # Medium-sized logo to match PDF
+            document.add_picture(logo_path, width=Inches(3))
+    except Exception as e:
+        print(f"Error adding logo: {e}")
+    
+    # Add demarcation line
+    document.add_paragraph().add_run('_' * 80)
     
     # Company information in a box
     company_info = document.add_table(rows=1, cols=1)
@@ -58,14 +80,6 @@ def generate_invoice_docx(invoice):
     company_paragraph.add_run('Phone: 07035495280 | Email: info@skidslogistics.com\n')
     company_paragraph.add_run('Website: www.skidslogistics.com')
     
-    # Add logo
-    try:
-        logo_path = os.path.join(settings.STATIC_ROOT, 'img/logo.png')
-        if os.path.exists(logo_path):
-            document.add_picture(logo_path, width=Inches(2))
-    except Exception as e:
-        print(f"Error adding logo: {e}")
-    
     # Add watermark if logo exists
     try:
         if os.path.exists(logo_path):
@@ -73,19 +87,17 @@ def generate_invoice_docx(invoice):
     except Exception as e:
         print(f"Error adding watermark: {e}")
     
-    # Divider
-    document.add_paragraph().add_run('_' * 80)
-    
     # Invoice title
     title = document.add_paragraph()
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    title_run = title.add_run(f"INVOICE NUMBER {invoice.invoice_number}")
+    title_run = title.add_run(f"INVOICE NUMBER Invoice {invoice.invoice_number}")
     title_run.bold = True
     title_run.font.size = Pt(16)
     
     # Client information
     document.add_paragraph(f"Client: {invoice.client_name}")
-    document.add_paragraph(f"Date: {invoice.date.strftime('%d-%m-%Y')}")
+    document.add_paragraph(f"Date: {invoice.date_created.strftime('%d-%m-%Y')}")
+    document.add_paragraph(f"Due Date: {invoice.due_date.strftime('%d-%m-%Y')}")
     
     # Items table
     document.add_paragraph()
@@ -138,7 +150,7 @@ def generate_invoice_docx(invoice):
     
     vat_cells = totals_table.rows[1].cells
     vat_cells[0].text = "VAT (7.5%):"
-    vat_cells[1].text = f"{invoice.currency} {'{:,.0f}'.format(invoice.vat)}"
+    vat_cells[1].text = f"{invoice.currency} {'{:,.0f}'.format(invoice.vat_amount)}"
     
     total_cells = totals_table.rows[2].cells
     total_cells[0].text = "Total:"
@@ -177,6 +189,21 @@ def generate_quotation_docx(quotation):
     document.core_properties.title = f"Quotation Number {quotation.quotation_number}"
     document.core_properties.author = "Skids LOGISTICS LTD"
     
+    # Add logo
+    try:
+        logo_path = os.path.join(settings.STATIC_ROOT, 'images/skids_logo.png')
+        if not os.path.exists(logo_path):
+            # Fallback to old path if new path doesn't exist
+            logo_path = os.path.join(settings.STATIC_ROOT, 'img/logo.png')
+        if os.path.exists(logo_path):
+            # Increased logo size by 5x (from 2 inches to 10 inches)
+            document.add_picture(logo_path, width=Inches(10))
+    except Exception as e:
+        print(f"Error adding logo: {e}")
+    
+    # Add demarcation line
+    document.add_paragraph().add_run('_' * 80)
+    
     # Company information in a box
     company_info = document.add_table(rows=1, cols=1)
     company_info.style = 'Table Grid'
@@ -191,14 +218,6 @@ def generate_quotation_docx(quotation):
     company_paragraph.add_run('Phone: 07035495280 | Email: info@skidslogistics.com\n')
     company_paragraph.add_run('Website: www.skidslogistics.com')
     
-    # Add logo
-    try:
-        logo_path = os.path.join(settings.STATIC_ROOT, 'img/logo.png')
-        if os.path.exists(logo_path):
-            document.add_picture(logo_path, width=Inches(2))
-    except Exception as e:
-        print(f"Error adding logo: {e}")
-    
     # Add watermark if logo exists
     try:
         if os.path.exists(logo_path):
@@ -206,19 +225,16 @@ def generate_quotation_docx(quotation):
     except Exception as e:
         print(f"Error adding watermark: {e}")
     
-    # Divider
-    document.add_paragraph().add_run('_' * 80)
-    
     # Quotation title
     title = document.add_paragraph()
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    title_run = title.add_run(f"QUOTATION NUMBER {quotation.quotation_number}")
+    title_run = title.add_run(f"QUOTATION NUMBER Quotation {quotation.quotation_number}")
     title_run.bold = True
     title_run.font.size = Pt(16)
     
     # Client information
     document.add_paragraph(f"Client: {quotation.client_name}")
-    document.add_paragraph(f"Date: {quotation.date.strftime('%d-%m-%Y')}")
+    document.add_paragraph(f"Date: {quotation.date_created.strftime('%d-%m-%Y')}")
     
     # Items table
     document.add_paragraph()
@@ -271,7 +287,7 @@ def generate_quotation_docx(quotation):
     
     vat_cells = totals_table.rows[1].cells
     vat_cells[0].text = "VAT (7.5%):"
-    vat_cells[1].text = f"{quotation.currency} {'{:,.0f}'.format(quotation.vat)}"
+    vat_cells[1].text = f"{quotation.currency} {'{:,.0f}'.format(quotation.vat_amount)}"
     
     total_cells = totals_table.rows[2].cells
     total_cells[0].text = "Total:"

@@ -4,6 +4,7 @@ from django.contrib import messages
 from .models import Quotation, Item
 from django.http import JsonResponse
 import json
+import re
 from decimal import Decimal
 from django.http import HttpResponse
 from django.template.loader import get_template
@@ -95,20 +96,25 @@ def quotation_detail(request, pk=None):
         # Process items
         item_names = request.POST.getlist('item_name[]')
         item_prices = request.POST.getlist('item_price[]')
-        item_quantities = request.POST.getlist('item_quantity[]')
+        item_quantity_displays = request.POST.getlist('item_quantity_display[]')
         item_units = request.POST.getlist('item_unit[]')
         item_lead_times = request.POST.getlist('item_lead_time[]')
         item_images = request.FILES.getlist('item_image[]')
         for i in range(len(item_names)):
             name = item_names[i]
             price_str = item_prices[i] if i < len(item_prices) else ''
-            qty_str = item_quantities[i] if i < len(item_quantities) else ''
+            qty_display = item_quantity_displays[i] if i < len(item_quantity_displays) else ''
             unit = item_units[i] if i < len(item_units) else 'EA'
             lead_time_str = item_lead_times[i] if i < len(item_lead_times) else ''
-            if name and price_str and qty_str:
+            if name and price_str and qty_display:
                 try:
                     price_val = Decimal(price_str)
-                    qty_val = int(qty_str)
+                    # Extract numeric value from quantity display field
+                    qty_match = re.match(r'^(\d+)', qty_display.strip())
+                    if qty_match:
+                        qty_val = int(qty_match.group(1))
+                    else:
+                        qty_val = 1
                 except Exception:
                     continue
                 image_file = item_images[i] if i < len(item_images) else None

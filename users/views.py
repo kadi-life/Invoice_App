@@ -68,19 +68,45 @@ class RegisterView(CreateView):
 
 def login_view(request):
     if request.method == 'POST':
+        # Get email and password directly from POST data
+        email = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        # Add debug message
+        messages.info(request, f"Attempting login with email: {email}")
+        
+        # Try to find the user first
+        try:
+            user_exists = CustomUser.objects.filter(email=email).exists()
+            if not user_exists:
+                messages.error(request, f"No user found with email: {email}")
+            else:
+                user = CustomUser.objects.get(email=email)
+                if not user.is_active:
+                    messages.error(request, "This account is inactive.")
+        except Exception as e:
+            messages.error(request, f"Error checking user: {str(e)}")
+        
+        # Process the form
         form = CustomAuthenticationForm(request, data=request.POST)
         if form.is_valid():
-            email = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(email=email, password=password)
+            # Simple authentication approach
+            user = authenticate(request, username=email, password=password)
+            
             if user is not None:
                 login(request, user)
+                messages.success(request, "Login successful!")
                 response = redirect('dashboard')
-                # Add cache control headers to prevent browser back button issues
                 response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
                 response['Pragma'] = 'no-cache'
                 response['Expires'] = '0'
                 return response
+            else:
+                messages.error(request, 'Authentication failed. Please check your credentials.')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
     else:
         form = CustomAuthenticationForm()
     response = render(request, 'users/login.html', {'form': form})

@@ -219,6 +219,7 @@
                                     <th>Created By</th>
                                     <th>Date</th>
                                     <th>Amount</th>
+                                    <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -229,8 +230,10 @@
                                     <td>{{ quotation.client_name }}</td>
                                     <td>{{ quotation.user.username }}</td>
                                     <td>{{ quotation.date_created|date:"M d, Y" }}</td>
-                                    <td>{% if quotation.currency == 'NGN' %}₦{% elif quotation.currency == 'USD' %}${% elif quotation.currency == 'EUR' %}€{% elif quotation.currency == 'GBP' %}£{% elif quotation.currency == 'CAD' %}C${% elif quotation.currency == 'AUD' %}A${% endif %} {{ quotation.total|default:"0.00" }}</td>
-
+                                    <td>{% if quotation.currency == 'NGN' %}₦{% elif quotation.currency == 'USD' %}${% elif quotation.currency == 'EUR' %}€{% elif quotation.currency == 'GBP' %}£{% elif quotation.currency == 'CAD' %}C${% elif quotation.currency == 'AUD' %}A${% endif %}{{ quotation.total }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ quotation.status|lower }}">{{ quotation.status }}</span>
+                                    </td>
                                     <td>
                                         <div class="btn-group" role="group">
                                             <a href="{% url 'view_quotation' quotation.id %}" class="btn btn-sm btn-outline-secondary">
@@ -239,7 +242,6 @@
                                             <a href="{% url 'quotation_pdf' quotation.id %}" class="btn btn-sm btn-outline-primary">
                                                 <i class="fas fa-file-pdf"></i>
                                             </a>
-                                            
                                         </div>
                                     </td>
                                 </tr>
@@ -315,7 +317,7 @@
                                     <td>{{ invoice.user.username }}</td>
                                     <td>{{ invoice.date_created|date:"M d, Y" }}</td>
                                     <td>{{ invoice.due_date|date:"M d, Y" }}</td>
-                                    <td>{% if invoice.currency == 'NGN' %}₦{% elif invoice.currency == 'USD' %}${% elif invoice.currency == 'EUR' %}€{% elif invoice.currency == 'GBP' %}£{% elif invoice.currency == 'CAD' %}C${% elif invoice.currency == 'AUD' %}A${% endif %} {{ invoice.total|default:"0.00" }}</td>
+                                    <td>{% if invoice.currency == 'NGN' %}₦{% elif invoice.currency == 'USD' %}${% elif invoice.currency == 'EUR' %}€{% elif invoice.currency == 'GBP' %}£{% elif invoice.currency == 'CAD' %}C${% elif invoice.currency == 'AUD' %}A${% endif %}{{ invoice.total }}</td>
                                     <td>
                                         <span class="badge bg-{{ invoice.status|lower }}">{{ invoice.status }}</span>
                                     </td>
@@ -326,9 +328,6 @@
                                             </a>
                                             <a href="{% url 'invoice_pdf' invoice.id %}" class="btn btn-sm btn-outline-primary">
                                                 <i class="fas fa-file-pdf"></i>
-                                            </a>
-                                            <a href="{% url 'export_invoice_docx' invoice.id %}" class="btn btn-sm btn-outline-success">
-                                                <i class="fas fa-file-word"></i>
                                             </a>
                                         </div>
                                     </td>

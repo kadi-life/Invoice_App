@@ -21,19 +21,18 @@
         }
         
         body::after {
-            content: "SKIDS LOGISTICS";
+            content: "";
             position: fixed;
-            top: 50%;
+            top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: -1;
             opacity: 0.1;
-            transform: rotate(-45deg);
-            transform-origin: 50% 50%;
-            font-size: 80px;
-            text-align: center;
-            color: #000;
+            background-image: url('{% static "images/skids_logo.png" %}');
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-size: 50%;
         }
         .header {
             margin-bottom: 20px;
@@ -85,8 +84,8 @@
         }
         
         .company-logo {
-            width: 60px;
-            height: 30px;
+            width: 300px;
+            height: 150px;
             object-fit: contain;
         }
         
@@ -172,12 +171,12 @@
             text-align: center;
             font-weight: 900;
             font-size: 12px;
-            border: 1px solid #ddd;
+            border: 2px solid #333;
         }
         .items-table td {
             padding: 6px 4px;
             text-align: center;
-            border: 1px solid #ddd;
+            border: 2px solid #333;
             vertical-align: middle;
         }
         .items-table .description {
@@ -251,20 +250,20 @@
         <img src="{% static 'images/skids_logo.png' %}" alt="Skids Logistics Logo" class="company-logo">
     </div>
     
-    <div class="demarcation-line"></div>
+    <div class="demarcation-line" style="border-bottom: 3px solid #000;"></div>
 
     <div class="client-section">
-        <p><strong>{{ invoice.client_name }}</strong></p>
+        <p><strong>Client:</strong> {{ invoice.client_name }}</p>
     </div>
 
     <div class="invoice-info">
-        <p><strong>Invoice Number:</strong> {{ invoice.invoice_number|default:invoice.id }}</p>
         <p><strong>Date:</strong> {{ invoice.date_created|date:"d/m/Y" }}</p>
+        <p><strong>Due Date:</strong> {{ invoice.due_date|date:"d/m/Y" }}</p>
     </div>
 
     <div class="invoice-title" style="border: none;">
         <span style="text-decoration: underline; font-size: 18px; font-weight: bold; color: #333;">
-            {{ invoice.invoice_number|default:invoice.id }}
+            Invoice {{ invoice.invoice_number|default:invoice.id }}
         </span>
     </div>
 
@@ -318,25 +317,19 @@
         <div class="total-row">
             <span class="total-label">Subtotal:</span>
             <span class="total-amount">
-                <span class="currency-symbol">
-                {% if invoice.currency == 'NGN' %}{% elif invoice.currency == 'USD' %}{% elif invoice.currency == 'EUR' %}{% elif invoice.currency == 'GBP' %}{% elif invoice.currency == 'CAD' %}{% elif invoice.currency == 'AUD' %}{% else %}{% endif %}
-                </span>{{ invoice.subtotal|floatformat:2|intcomma }}
+                {{ invoice.subtotal|floatformat:2|intcomma }} {{ invoice.currency }}
             </span>
         </div>
         <div class="total-row">
             <span class="total-label">VAT ({{ invoice.vat_percentage }}%):</span>
             <span class="total-amount">
-                <span class="currency-symbol">
-                {% if invoice.currency == 'NGN' %}{% elif invoice.currency == 'USD' %}{% elif invoice.currency == 'EUR' %}{% elif invoice.currency == 'GBP' %}{% elif invoice.currency == 'CAD' %}{% elif invoice.currency == 'AUD' %}{% else %}{% endif %}
-                </span>{{ invoice.vat_amount|floatformat:2|intcomma }}
+                {{ invoice.vat_amount|floatformat:2|intcomma }} {{ invoice.currency }}
             </span>
         </div>
         <div class="total-row total-grand">
             <span class="total-label">Total:</span>
             <span class="total-amount">
-                <span class="currency-symbol">
-                {% if invoice.currency == 'USD' %}{% elif invoice.currency == 'EUR' %}{% elif invoice.currency == 'GBP' %}{% elif invoice.currency == 'CAD' %}{% elif invoice.currency == 'AUD' %}{% else %}{% endif %}
-                </span>{{ invoice.total|floatformat:2|intcomma }}
+                {{ invoice.total|floatformat:2|intcomma }} {{ invoice.currency }}
             </span>
         </div>
     </div>

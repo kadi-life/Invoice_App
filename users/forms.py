@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import authenticate
 from .models import CustomUser
 from django.core.exceptions import ValidationError
 
@@ -41,6 +42,27 @@ class CustomAuthenticationForm(AuthenticationForm):
     password = forms.CharField(widget=forms.PasswordInput(
         attrs={'class': 'form-control', 'placeholder': 'Password'}
     ))
+    
+    def clean(self):
+        # Get the username (email) and password from the form
+        email = self.cleaned_data.get('username')
+        password = self.cleaned_data.get('password')
+        
+        if email and password:
+            # Simple authentication approach
+            self.user_cache = authenticate(
+                self.request, username=email, password=password
+            )
+            
+            if self.user_cache is None:
+                # Log the authentication failure
+                from django.contrib import messages
+                messages.error(self.request, f"Authentication failed for email: {email}")
+                raise self.get_invalid_login_error()
+            else:
+                self.confirm_login_allowed(self.user_cache)
+                
+        return self.cleaned_data
 
 class AdminUserEditForm(forms.ModelForm):
     class Meta:

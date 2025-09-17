@@ -5,6 +5,7 @@ from .models import Invoice
 from quotations.models import Item
 from django.http import JsonResponse, HttpResponse
 import json
+import re
 from datetime import datetime, timedelta
 from decimal import Decimal
 from .utils import generate_invoice_pdf
@@ -125,18 +126,20 @@ def invoice_detail(request, pk=None):
         # Process items
         item_names = request.POST.getlist('item_name[]')
         item_prices = request.POST.getlist('item_price[]')
-        item_quantities = request.POST.getlist('item_quantity[]')
+        item_quantity_displays = request.POST.getlist('item_quantity_display[]')
         item_units = request.POST.getlist('item_unit[]')
         item_images = request.FILES.getlist('item_image[]')
         for i in range(len(item_names)):
             name = item_names[i]
             price_str = item_prices[i] if i < len(item_prices) else ''
-            qty_str = item_quantities[i] if i < len(item_quantities) else ''
+            qty_display = item_quantity_displays[i] if i < len(item_quantity_displays) else ''
             unit = item_units[i] if i < len(item_units) else 'EA'
-            if name and price_str and qty_str:
+            if name and price_str and qty_display:
                 try:
                     price_val = Decimal(price_str)
-                    qty_val = int(qty_str)
+                    # Extract just the numeric part from the quantity display
+                    qty_match = re.match(r'^\d+(\.\d+)?', qty_display)
+                    qty_val = int(float(qty_match.group(0))) if qty_match else 0
                 except Exception:
                     continue
                 image_file = item_images[i] if i < len(item_images) else None
