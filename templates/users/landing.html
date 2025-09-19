@@ -315,6 +315,78 @@
                 <i class="fas fa-sign-in-alt me-2"></i>Get Started
             </a>
         </div>
+        
+        {% if debug %}
+        <div style="position: absolute; top: 20px; right: 20px; z-index: 100; background: rgba(255,255,255,0.9); padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.2); text-align: left; max-width: 500px; max-height: 80vh; overflow-y: auto;">
+            <h3>Debug Information</h3>
+            <hr>
+            <p><strong>Database Engine:</strong> {{ debug_info.db_engine }}</p>
+            <p><strong>Debug Mode:</strong> {{ debug_info.debug_mode }}</p>
+            <p><strong>Auth Backends:</strong></p>
+            <ul>
+                {% for backend in debug_info.auth_backends %}
+                <li>{{ backend }}</li>
+                {% endfor %}
+            </ul>
+            <hr>
+            
+            <!-- Test Login Form -->
+            <h4>Test Login</h4>
+            <form method="post" action="{% url 'debug_auth' %}" class="mb-4">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="test_email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="test_email" name="test_email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="test_password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="test_password" name="test_password" required>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Test Login</button>
+                    <button type="submit" class="btn btn-success" name="direct_login" value="true">Direct Login (Bypass Auth)</button>
+                </div>
+                <small class="text-muted d-block mt-2">Direct Login bypasses the authentication backend and logs in directly if the password is correct.</small>
+            </form>
+            
+            <!-- Test Results -->
+            {% if test_result %}
+            <div class="alert {% if test_result.error or not test_result.auth_result %}alert-danger{% else %}alert-success{% endif %} mb-4">
+                <h5>Test Results for {{ test_result.email }}</h5>
+                {% if test_result.error %}
+                    <p>Error: {{ test_result.error }}</p>
+                {% else %}
+                    <p><strong>Password Check:</strong> {{ test_result.password_check }}</p>
+                    <p><strong>Authentication:</strong> {{ test_result.auth_result }}</p>
+                    <p><strong>User Active:</strong> {{ test_result.user_active }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <hr>
+            <h4>Users ({{ debug_info.total_users }})</h4>
+            <table class="table table-sm table-bordered">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Active</th>
+                        <th>Staff</th>
+                        <th>Test Password</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in debug_info.users %}
+                    <tr>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.active }}</td>
+                        <td>{{ user.staff }}</td>
+                        <td>{{ user.test_password_valid }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
     </div>
     </div>
 </div>

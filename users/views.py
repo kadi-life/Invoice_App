@@ -20,6 +20,105 @@ def landing_page(request):
         return redirect('dashboard')
     return render(request, 'users/landing.html')
 
+
+def debug_auth(request):
+    """Temporary view to debug authentication issues"""
+    import logging
+    logger = logging.getLogger('users')
+    
+    # Log environment information
+    import os
+    logger.debug(f"DEBUG setting: {os.environ.get('DEBUG', 'Not set')}")
+    logger.debug(f"RENDER environment: {os.environ.get('RENDER', 'Not set')}")
+    
+    # Log database connection info
+    from django.conf import settings
+    db_engine = settings.DATABASES['default']['ENGINE']
+    logger.debug(f"Database engine: {db_engine}")
+    
+    # Check if we can connect to the database
+    from django.db import connection
+    try:
+        connection.ensure_connection()
+        logger.debug("Database connection successful")
+    except Exception as e:
+        logger.error(f"Database connection error: {str(e)}")
+    
+    # Check authentication backends
+    logger.debug(f"Authentication backends: {settings.AUTHENTICATION_BACKENDS}")
+    
+    # List all users
+    from users.models import CustomUser
+    users = CustomUser.objects.all()
+    logger.debug(f"Total users in database: {users.count()}")
+    
+    # Prepare debug info for display
+    debug_info = {
+        'total_users': users.count(),
+        'users': [],
+        'db_engine': db_engine,
+        'auth_backends': settings.AUTHENTICATION_BACKENDS,
+        'debug_mode': settings.DEBUG,
+    }
+    
+    # Handle password test form submission
+    test_email = request.POST.get('test_email', '')
+    test_password = request.POST.get('test_password', '')
+    direct_login = request.POST.get('direct_login', '') == 'true'
+    test_result = None
+    
+    if test_email and test_password and request.method == 'POST':
+        try:
+            test_user = CustomUser.objects.get(email=test_email)
+            password_valid = test_user.check_password(test_password)
+            logger.debug(f"Manual password test for {test_email}: {password_valid}")
+            
+            # Try to authenticate with the provided credentials
+            from django.contrib.auth import authenticate, login
+            auth_user = authenticate(request, username=test_email, password=test_password)
+            auth_result = auth_user is not None
+            
+            # If direct login is requested and password is valid, log the user in directly
+            if direct_login and password_valid and test_user.is_active:
+                login(request, test_user)
+                logger.debug(f"Direct login for {test_email} successful")
+                from django.contrib import messages
+                messages.success(request, f"Direct login successful for {test_email}")
+                return redirect('dashboard')
+            
+            test_result = {
+                'email': test_email,
+                'password_check': password_valid,
+                'auth_result': auth_result,
+                'user_active': test_user.is_active if test_user else False
+            }
+        except CustomUser.DoesNotExist:
+            logger.error(f"User with email {test_email} not found")
+            test_result = {
+                'email': test_email,
+                'error': 'User not found'
+            }
+    
+    for user in users:
+        logger.debug(f"User: {user.email}, active: {user.is_active}, staff: {user.is_staff}")
+        # Test password validation directly
+        default_test_password = 'test123'  # A test password to try
+        password_valid = user.check_password(default_test_password)
+        logger.debug(f"Default password test for {user.email}: {password_valid}")
+        
+        debug_info['users'].append({
+            'email': user.email,
+            'active': user.is_active,
+            'staff': user.is_staff,
+            'test_password_valid': password_valid
+        })
+    
+    return render(request, 'users/landing.html', {
+        'debug': True, 
+        'debug_info': debug_info,
+        'test_result': test_result
+    })
+
 class RegisterView(CreateView):
     form_class = CustomUserCreationForm
     template_name = 'users/register.html'
@@ -67,6 +166,9 @@ class RegisterView(CreateView):
         return super().form_invalid(form)
 
 def login_view(request):
+    import logging
+    logger = logging.getLogger('users')
+    
     if request.method == 'POST':
         # Get email and password directly from POST data
         email = request.POST.get('username')
@@ -74,17 +176,39 @@ def login_view(request):
         
         # Add debug message
         messages.info(request, f"Attempting login with email: {email}")
+        logger.debug(f"Login attempt for email: {email}")
         
         # Try to find the user first
         try:
             user_exists = CustomUser.objects.filter(email=email).exists()
             if not user_exists:
+                logger.error(f"No user found with email: {email}")
                 messages.error(request, f"No user found with email: {email}")
             else:
                 user = CustomUser.objects.get(email=email)
                 if not user.is_active:
+                    logger.error(f"User account is inactive: {email}")
                     messages.error(request, "This account is inactive.")
+                else:
+                    # Log user details for debugging
+                    logger.debug(f"Found user: {user.email}, is_active: {user.is_active}, is_staff: {user.is_staff}")
+                    
+                    # Direct password check for debugging
+                    password_valid = user.check_password(password)
+                    logger.debug(f"Direct password check for {email}: {password_valid}")
+                    
+                    if password_valid:
+                        # If password is valid but authenticate might fail, try direct login
+                        logger.debug(f"Password is valid, attempting direct login for {email}")
+                        login(request, user)
+                        messages.success(request, "Login successful (direct)!")
+                        response = redirect('dashboard')
+                        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+                        response['Pragma'] = 'no-cache'
+                        response['Expires'] = '0'
+                        return response
         except Exception as e:
+            logger.error(f"Error checking user: {str(e)}")
             messages.error(request, f"Error checking user: {str(e)}")
         
         # Process the form
@@ -92,6 +216,8 @@ def login_view(request):
         if form.is_valid():
             # Simple authentication approach
             user = authenticate(request, username=email, password=password)
+            
+            logger.debug(f"Authentication result for {email}: {user is not None}")
             
             if user is not None:
                 login(request, user)
@@ -102,8 +228,12 @@ def login_view(request):
                 response['Expires'] = '0'
                 return response
             else:
+                # Log authentication failure
+                logger.error(f"Authentication failed for email: {email}")
                 messages.error(request, 'Authentication failed. Please check your credentials.')
         else:
+            # Log form validation errors
+            logger.error(f"Form validation errors: {form.errors}")
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f"{field}: {error}")

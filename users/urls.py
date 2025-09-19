@@ -3,6 +3,7 @@ from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
+    path('debug-auth/', views.debug_auth, name='debug_auth'),
     path('', views.landing_page, name='landing'),
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin-dashboard/users/<int:pk>/', views.admin_user_detail, name='admin_user_detail'),
