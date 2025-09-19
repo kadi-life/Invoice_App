@@ -4,7 +4,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Invoice #{{ invoice.invoice_number|default:invoice.id }}</title>
+    <title>INVOICE #{{ invoice.invoice_number|default:invoice.id }}</title>
     <style>
         @page {
             size: a4 portrait;
@@ -283,7 +283,6 @@
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td class="description">
-                    {% if item.image %}<img src="{{ item.image.url }}" alt="" class="item-image">{% endif %}
                     {{ item.name }}
                 </td>
                 <td>{{ item.quantity }} {{ item.unit|default:'EA' }}</td>
@@ -341,6 +340,25 @@
     </div>
     {% endif %}
 
-
+    <!-- Check if any items have images -->
+    {% with items_with_images=invoice.items.all|dictsort:"image"|last %}
+        {% if items_with_images.image %}
+            <!-- At least one item has an image -->
+            <div style="page-break-before: always;">
+                <h2 style="text-align: center; margin-top: 20px; margin-bottom: 20px;">ITEM IMAGES</h2>
+                
+                <div style="display: flex; flex-wrap: wrap; justify-content: space-between;">
+                    {% for item in invoice.items.all %}
+                        {% if item.image %}
+                            <div style="width: 45%; margin-bottom: 30px; text-align: center;">
+                                <img src="{{ item.image.url }}" alt="{{ item.name }}" style="max-width: 100%; height: auto; display: block; margin: 0 auto; border: 1px solid #ddd;">
+                                <p style="margin-top: 10px; font-weight: bold;">{{ item.name }}</p>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    {% endwith %}
 </body>
 </html>

@@ -27,8 +27,8 @@ class InvoiceAdmin(admin.ModelAdmin):
     inlines = [ItemInline]
     
     def export_buttons(self, obj):
-        pdf_url = reverse('export_invoice_pdf', args=[obj.id])
-        docx_url = reverse('export_invoice_docx', args=[obj.id])
+        pdf_url = reverse('invoice_pdf', args=[obj.id])
+        docx_url = reverse('invoice_docx', args=[obj.id])
         return format_html(
             '<a class="button" href="{}" target="_blank">PDF</a>&nbsp;'
             '<a class="button" href="{}" target="_blank">Word</a>',

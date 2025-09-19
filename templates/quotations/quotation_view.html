@@ -52,6 +52,9 @@
             <a href="{% url 'quotation_pdf' quotation.id %}" class="btn btn-outline-primary me-2" target="_blank">
                 <i class="fas fa-file-pdf me-2"></i> Export PDF
             </a>
+            <a href="{% url 'quotation_docx' quotation.id %}" class="btn btn-outline-secondary me-2" target="_blank">
+                <i class="fas fa-file-word me-2"></i> Export Word
+            </a>
             <a href="{% url 'quotation_convert' quotation.id %}?redirect=view" class="btn btn-outline-success">
                 <i class="fas fa-file-invoice me-2"></i> Convert to Invoice
             </a>

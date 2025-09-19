@@ -264,7 +264,7 @@
 
     <div class="quotation-title" style="border: none;">
         <span style="text-decoration: underline; font-size: 18px; font-weight: bold; color: #333;">
-            Quotation {{ quotation.quotation_number|default:quotation.id }}
+            QUOTATION {{ quotation.quotation_number|default:quotation.id }}
         </span>
     </div>
 
@@ -284,7 +284,6 @@
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td class="description">
-                    {% if item.image %}<img src="{{ item.image.url }}" alt="" class="item-image">{% endif %}
                     {{ item.name }}
                 </td>
                 <td>{{ item.quantity }} {{ item.unit|default:'EA' }}</td>
@@ -342,7 +341,27 @@
     </div>
     {% endif %}
 
-
+    {% with items_with_images=quotation.items.all|dictsort:"image"|last %}
+        {% with has_images=items_with_images.image %}
+        
+        {% if has_images %}
+            <div style="page-break-before: always;">
+                <h2 style="text-align: center; margin-top: 20px; margin-bottom: 20px;">ITEM IMAGES</h2>
+                
+                <div style="display: flex; flex-wrap: wrap; justify-content: space-between;">
+                    {% for item in quotation.items.all %}
+                        {% if item.image %}
+                            <div style="width: 45%; margin-bottom: 30px; text-align: center;">
+                                <img src="{{ item.image.url }}" alt="{{ item.name }}" style="max-width: 100%; height: auto; display: block; margin: 0 auto; border: 1px solid #ddd;">
+                                <p style="margin-top: 10px; font-weight: bold;">{{ item.name }}</p>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    {% endwith %}
+    {% endwith %}
 </body>
 </html>
 

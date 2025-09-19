@@ -186,7 +186,7 @@ def convert_to_invoice(request, pk):
     # Create a new invoice with the same data as the quotation
     invoice = Invoice(
         user=request.user,
-        invoice_number=f"INV-{quotation.quotation_number or quotation.id}",
+        invoice_number=f"INV-{quotation.quotation_number or quotation.id}".upper(),
         client_name=quotation.client_name,
         vat_percentage=quotation.vat_percentage,
         subtotal=quotation.subtotal,
@@ -212,7 +212,7 @@ def convert_to_invoice(request, pk):
     invoice.calculate_totals()
     invoice.save()
     
-    messages.success(request, f'Quotation #{quotation.quotation_number or quotation.id} successfully converted to Invoice #{invoice.invoice_number}')
+    messages.success(request, f'Quotation #{(quotation.quotation_number or quotation.id).upper()} successfully converted to Invoice #{invoice.invoice_number}')
     return redirect('invoice_detail', pk=invoice.id)
 
 @login_required

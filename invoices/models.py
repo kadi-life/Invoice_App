@@ -34,7 +34,7 @@ class Invoice(models.Model):
     notes = models.TextField(blank=True, null=True)
     
     def __str__(self):
-        return f"Invoice {self.invoice_number or self.id} for {self.client_name}"
+        return f"Invoice {(self.invoice_number or self.id).upper()} for {self.client_name}"
     
     def calculate_totals(self):
         self.subtotal = sum(item.total for item in self.items.all())

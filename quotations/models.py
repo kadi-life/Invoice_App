@@ -53,7 +53,7 @@ class Quotation(models.Model):
     notes = models.TextField(blank=True, null=True, verbose_name="Additional Notes")
     
     def __str__(self):
-        return f"Quotation {self.quotation_number or self.id} for {self.client_name}"
+        return f"Quotation {(self.quotation_number or self.id).upper()} for {self.client_name}"
     
     def calculate_totals(self):
         self.subtotal = sum(item.total for item in self.items.all())

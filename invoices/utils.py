@@ -35,7 +35,17 @@ def _link_callback(uri, rel):
     media_url = settings.MEDIA_URL
     if uri.startswith(media_url):
         media_rel_path = uri.replace(media_url, '')
-        return os.path.join(settings.MEDIA_ROOT, media_rel_path)
+        media_path = os.path.join(settings.MEDIA_ROOT, media_rel_path)
+        # Print for debugging
+        print(f"Media URL: {uri} -> Path: {media_path} (Exists: {os.path.exists(media_path)})")
+        return media_path
+    
+    # Handle relative URLs that might be media files
+    if uri.startswith('/media/'):
+        media_rel_path = uri.replace('/media/', '')
+        media_path = os.path.join(settings.MEDIA_ROOT, media_rel_path)
+        print(f"Relative Media URL: {uri} -> Path: {media_path} (Exists: {os.path.exists(media_path)})")
+        return media_path
 
     # Fallback: try joining BASE_DIR
     return os.path.join(settings.BASE_DIR, uri.lstrip('/'))
