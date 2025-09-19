@@ -21,12 +21,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-)pzbpjk*m#@$=9^izz1bbg8i-&t*ejy4=iwhqs&l)_qpi3r-ny'
+# Use environment variable for SECRET_KEY in production
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-)pzbpjk*m#@$=9^izz1bbg8i-&t*ejy4=iwhqs&l)_qpi3r-ny')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.vercel.app']
+# Allow all hosts in development, but only specific ones in production
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.vercel.app', 'invoice-app-840p.onrender.com', '.onrender.com']
 
 
 # Application definition
@@ -85,16 +90,28 @@ WSGI_APPLICATION = 'invoice_project.wsgi.application'
 import os
 import dj_database_url
 
-# Use Neon PostgreSQL for production, SQLite for local development
-NEON_DATABASE_URL = "postgresql://neondb_owner:npg_xsSl9Xehk1qR@ep-tiny-haze-adklh2w6-pooler.c-2.us-east-1.aws.neon.tech/Invoicer_App%20DB?sslmode=require&channel_binding=require"
-
-# Force use of SQLite for local development
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+# Database configuration - use PostgreSQL in production, SQLite in development
+if DEBUG:
+    # Use SQLite for local development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
     }
-}
+else:
+    # Use PostgreSQL for production (Render or other hosting)
+    DATABASE_URL = os.environ.get('DATABASE_URL', None)
+    if DATABASE_URL:
+        DATABASES = {
+            'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600, ssl_require=True)
+        }
+    else:
+        # Fallback to Neon PostgreSQL if DATABASE_URL is not set
+        NEON_DATABASE_URL = "postgresql://neondb_owner:npg_xsSl9Xehk1qR@ep-tiny-haze-adklh2w6-pooler.c-2.us-east-1.aws.neon.tech/Invoicer_App%20DB?sslmode=require&channel_binding=require"
+        DATABASES = {
+            'default': dj_database_url.config(default=NEON_DATABASE_URL, conn_max_age=600, ssl_require=True)
+        }
 
 
 # Password validation
@@ -134,6 +151,9 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Enable WhiteNoise compression and caching for better performance
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files
 MEDIA_URL = '/media/'
@@ -177,3 +197,8 @@ else:
     # EMAIL_USE_TLS = True
     # EMAIL_HOST_USER = 'your-email@example.com'
     # EMAIL_HOST_PASSWORD = 'your-password'
+
+# CSRF settings for secure forms in production
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com', 'https://invoice-app-840p.onrender.com']
