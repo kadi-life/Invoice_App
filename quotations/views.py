@@ -12,6 +12,7 @@ from invoices.utils import render_to_pdf
 from django.db.models import Q
 from datetime import datetime
 
+
 @login_required
 def quotation_list(request):
     quotations = Quotation.objects.filter(user=request.user).order_by('-date_created')
@@ -109,12 +110,12 @@ def quotation_detail(request, pk=None):
             if name and price_str and qty_display:
                 try:
                     price_val = Decimal(price_str)
-                    # Extract numeric value from quantity display field
-                    qty_match = re.match(r'^(\d+)', qty_display.strip())
+                    # Extract numeric value from quantity display field, ignoring any unit text
+                    qty_match = re.match(r'^(\d+(?:\.\d+)?)', qty_display.strip())
                     if qty_match:
-                        qty_val = int(qty_match.group(1))
+                        qty_val = float(qty_match.group(1))
                     else:
-                        qty_val = 1
+                        qty_val = 0
                 except Exception:
                     continue
                 image_file = item_images[i] if i < len(item_images) else None
@@ -122,7 +123,7 @@ def quotation_detail(request, pk=None):
                     name=name,
                     price=price_val,
                     quantity=qty_val,
-                    unit=unit,
+                    unit=unit if unit else "",
                     image=image_file,
                     lead_time=lead_time_str
                 )
@@ -137,12 +138,14 @@ def quotation_detail(request, pk=None):
     
     return render(request, 'quotations/quotation_detail.html', {'quotation': quotation})
 
+
 @login_required
 def quotation_pdf(request, pk):
     if request.user.is_staff:
         quotation = get_object_or_404(Quotation, pk=pk)
     else:
         quotation = get_object_or_404(Quotation, pk=pk, user=request.user)
+
     context = {
         'quotation': quotation,
         'company_name': 'Skids LOGISTICS LTD',
@@ -150,8 +153,12 @@ def quotation_pdf(request, pk):
         'company_phone': '07035495280',
         'company_email': 'info@skidslogistics.com',
         'company_website': 'www.skidslogistics.com',
+        'request': request,
     }
+
     return render_to_pdf('quotations/quotation_pdf.html', context)
+
+
 
 @login_required
 def quotation_docx(request, pk):
@@ -160,7 +167,7 @@ def quotation_docx(request, pk):
     else:
         quotation = get_object_or_404(Quotation, pk=pk, user=request.user)
     from invoices.docx_utils import generate_quotation_docx
-    return generate_quotation_docx(quotation)
+    return generate_quotation_docx(quotation, request=request)
 
 @login_required
 def delete_quotation(request, pk):

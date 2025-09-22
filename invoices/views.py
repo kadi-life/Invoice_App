@@ -137,9 +137,9 @@ def invoice_detail(request, pk=None):
             if name and price_str and qty_display:
                 try:
                     price_val = Decimal(price_str)
-                    # Extract just the numeric part from the quantity display
-                    qty_match = re.match(r'^\d+(\.\d+)?', qty_display)
-                    qty_val = int(float(qty_match.group(0))) if qty_match else 0
+                    # Extract numeric value from quantity display field, ignoring any unit text
+                    qty_match = re.match(r'^(\d+(?:\.\d+)?)', qty_display.strip())
+                    qty_val = float(qty_match.group(1)) if qty_match else 0
                 except Exception:
                     continue
                 image_file = item_images[i] if i < len(item_images) else None
@@ -213,7 +213,7 @@ def export_invoice_pdf(request, pk):
         invoice = get_object_or_404(Invoice, pk=pk)
     else:
         invoice = get_object_or_404(Invoice, pk=pk, user=request.user)
-    return generate_invoice_pdf(invoice)
+    return generate_invoice_pdf(invoice, request=request)
 
 @login_required
 def export_invoice_docx(request, pk):

@@ -251,7 +251,7 @@
                                     </td>
                                     <td>
                                         <input type="text" name="item_quantity_display[]" class="form-control item-quantity-display" value="{{ item.quantity }}{% if item.unit != 'EA' %} {{ item.unit }}{% endif %}" required style="width: 100%">
-                                        <input type="hidden" name="item_unit[]" value="EA">
+                                        <input type="hidden" name="item_unit[]" value="">
                                         </div>
                                     </td>
                                     <td>
@@ -275,7 +275,7 @@
                                     </td>
                                     <td>
                                         <input type="text" name="item_quantity_display[]" class="form-control item-quantity-display" value="1" required style="width: 100%">
-                                        <input type="hidden" name="item_unit[]" value="EA">
+                                        <input type="hidden" name="item_unit[]" value="">
                                     </td>
                                     <td>
                                         <input type="number" class="form-control item-total" value="0" readonly>
@@ -423,7 +423,7 @@
                 </td>
                 <td>
                     <input type="text" name="item_quantity_display[]" class="form-control item-quantity-display" value="1" required style="width: 100%">
-                    <input type="hidden" name="item_unit[]" value="EA">
+                    <input type="hidden" name="item_unit[]" value="">
                 </td>
                 <td>
                     <input type="number" class="form-control item-total" value="0" readonly>
@@ -460,10 +460,11 @@
             
             function updateItemTotal() {
                 const price = parseFloat(priceInput.value) || 0;
-                // Extract just the numeric part from the quantity display
-                const quantityText = quantityDisplayInput.value;
-                const quantityMatch = quantityText.match(/^\d+(\.\d+)?/);
-                const quantity = quantityMatch ? parseFloat(quantityMatch[0]) : 0;
+                // Extract numeric value from quantity display field, ignoring any unit text
+                const quantityText = quantityDisplayInput.value.trim();
+                const quantityMatch = quantityText.match(/^(\d+(\.\d+)?)/);
+                const quantity = quantityMatch ? parseFloat(quantityMatch[1]) : 0;
+                
                 const total = price * quantity;
                 totalInput.value = total.toFixed(2);
                 calculateTotals();

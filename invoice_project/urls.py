@@ -19,6 +19,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
+import os
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,6 +28,7 @@ urlpatterns = [
     path('invoices/', include('invoices.urls')),
 ]
 
-if settings.DEBUG:
+# ✅ Serve static + media files in local development only
+if settings.DEBUG and not os.environ.get("USE_SUPABASE_STORAGE") == "True":
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
